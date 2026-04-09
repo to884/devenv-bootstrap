@@ -1,0 +1,50 @@
+---
+# ============================================================================
+# コンテナ環境セットアップ Playbook
+# ============================================================================
+#
+# 目的:
+#   Dockerコンテナ環境専用のセットアップを実行します
+#
+# 使用方法:
+#   ansible-playbook -i inventories/docker/hosts playbooks/containers.yml
+#
+# ============================================================================
+
+- name: コンテナ環境セットアップ
+  hosts: docker
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: セットアップ開始メッセージ
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          コンテナ環境セットアップを開始します
+          ================================================
+
+    - name: sudo 設定を適用
+      ansible.builtin.include_role:
+        name: sudo
+      tags:
+        - sudo
+
+    - name: 共通パッケージとLinuxbrewをインストール
+      ansible.builtin.include_role:
+        name: common
+      tags:
+        - common
+
+    - name: Docker固有の設定を適用
+      ansible.builtin.include_role:
+        name: docker
+      tags:
+        - docker
+
+    - name: セットアップ完了メッセージ
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          コンテナ環境セットアップが完了しました！
+          ================================================

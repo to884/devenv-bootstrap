@@ -1,0 +1,11 @@
+# ============================================================================
+# Azure VM インベントリ
+# ============================================================================
+
+[azure_vm]
+localhost ansible_connection=local
+
+[azure_vm:vars]
+ansible_python_interpreter=/usr/bin/python3
+environment_type=azure_vm
+cloud_provider=azure

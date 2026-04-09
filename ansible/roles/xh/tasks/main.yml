@@ -1,0 +1,56 @@
+---
+# ============================================================================
+# xh ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   xh（高速でユーザーフレンドリーなHTTPクライアント）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - xh: https://github.com/ducaale/xh
+#
+
+- name: xh をインストール
+  community.general.homebrew:
+    name: xh
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: xh のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/xh --version
+  register: xh_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: xh インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      xh のインストールが完了しました！
+      ================================================
+      バージョン: {{ xh_version.stdout | default('確認失敗') }}
+
+      使用方法:
+      # GET リクエスト
+      xh httpbin.org/get
+
+      # POST リクエスト（JSON）
+      xh POST httpbin.org/post name=John age:=30
+
+      # カスタムヘッダー
+      xh httpbin.org/headers Authorization:"Bearer token"
+
+      # ダウンロード
+      xh --download httpbin.org/image/png
+
+      # HTTPie互換モード（xhs でHTTPS、xh でHTTP）
+      xhs example.com/api
+
+      詳細なヘルプ: xh --help

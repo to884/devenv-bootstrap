@@ -1,0 +1,11 @@
+# ============================================================================
+# Docker コンテナ インベントリ
+# ============================================================================
+
+[docker]
+localhost ansible_connection=local
+
+[docker:vars]
+ansible_python_interpreter=/usr/bin/python3
+environment_type=docker
+container_runtime=docker

@@ -1,0 +1,10 @@
+# ============================================================================
+# Hyper-V インベントリ
+# ============================================================================
+
+[hyperv]
+localhost ansible_connection=local
+
+[hyperv:vars]
+ansible_python_interpreter=/usr/bin/python3
+environment_type=hyperv

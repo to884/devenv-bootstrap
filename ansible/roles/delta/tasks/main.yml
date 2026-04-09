@@ -1,0 +1,85 @@
+---
+# ============================================================================
+# delta ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   git-delta（Git差分の構文ハイライトツール）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - git-delta: https://github.com/dandavison/delta
+#
+
+- name: git-delta をインストール
+  community.general.homebrew:
+    name: git-delta
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: delta のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/delta --version
+  register: delta_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: Git に delta をページャーとして設定
+  community.general.git_config:
+    name: core.pager
+    scope: global
+    value: delta
+  become: no
+
+- name: Git に delta を interactive diffFilter として設定
+  community.general.git_config:
+    name: interactive.diffFilter
+    scope: global
+    value: delta --color-only
+  become: no
+
+- name: delta のナビゲーション機能を有効化
+  community.general.git_config:
+    name: delta.navigate
+    scope: global
+    value: "true"
+  become: no
+
+- name: Git のマージコンフリクトスタイルを zdiff3 に設定
+  community.general.git_config:
+    name: merge.conflictStyle
+    scope: global
+    value: zdiff3
+  become: no
+
+- name: Git の diff で移動したコードの色分けを有効化
+  community.general.git_config:
+    name: diff.colorMoved
+    scope: global
+    value: default
+  become: no
+
+- name: git-delta インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      git-delta のインストールと設定が完了しました！
+      ================================================
+      バージョン: {{ delta_version.stdout | default('確認失敗') }}
+
+      設定済みの Git config:
+      - core.pager = delta
+      - interactive.diffFilter = delta --color-only
+      - delta.navigate = true
+      - merge.conflictStyle = zdiff3
+      - diff.colorMoved = default
+
+      使用方法:
+      git diff        # 差分を delta で表示
+      git log -p      # ログと差分を delta で表示
+      git show        # コミット内容を delta で表示

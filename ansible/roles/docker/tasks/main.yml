@@ -1,0 +1,25 @@
+---
+# ============================================================================
+# docker ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   Docker コンテナ環境固有の設定を行います
+#
+
+- name: Docker 環境を確認
+  ansible.builtin.debug:
+    msg: "Docker コンテナ環境でのセットアップを実行します"
+
+- name: コンテナ環境特有の最適化
+  ansible.builtin.debug:
+    msg: "Docker コンテナ内では一部のサービスをスキップします"
+
+- name: .dockerenv ファイルの存在確認
+  ansible.builtin.stat:
+    path: /.dockerenv
+  register: dockerenv_file
+
+- name: Docker コンテナ内であることを確認
+  ansible.builtin.debug:
+    msg: "Docker コンテナ内で実行中: {{ dockerenv_file.stat.exists }}"

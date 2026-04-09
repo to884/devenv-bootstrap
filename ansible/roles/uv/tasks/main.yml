@@ -1,0 +1,60 @@
+---
+# ============================================================================
+# uv ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   uv（高速Pythonパッケージインストーラー）とuvxをインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - uv: https://github.com/astral-sh/uv
+#
+
+- name: uv がインストール済みか確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew list uv
+  register: uv_check
+  ignore_errors: yes
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: uv をインストール
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew install uv
+  when: uv_check.rc != 0
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: uv のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/uv --version
+  register: uv_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: uv インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      uv のインストールが完了しました！
+      ================================================
+      バージョン: {{ uv_version.stdout | default('確認失敗') }}
+
+      使用方法:
+      # Pythonパッケージをインストール
+      uv pip install <package>
+
+      # 仮想環境を作成
+      uv venv
+
+      # ツールを実行（uvx）
+      uvx <tool-name>
+
+      # 例: ruffを実行
+      uvx ruff check .
+      ================================================
+  when: uv_version.rc == 0

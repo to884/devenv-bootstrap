@@ -1,0 +1,95 @@
+---
+# ============================================================================
+# docker_install ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   Docker Engine をインストールします
+#
+# 注意事項:
+#   - Docker環境ではスキップします（既にDockerコンテナ内のため）
+#   - 公式インストールスクリプトを使用します
+#
+
+- name: Docker がインストール済みか確認
+  ansible.builtin.command: which docker
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+  failed_when: false
+
+- name: Docker インストールをスキップ (Docker環境)
+  ansible.builtin.debug:
+    msg: "Docker環境のため Docker のインストールをスキップしました"
+  when: environment_type | default('') == 'docker'
+
+- name: Docker インストールをスキップ (既にインストール済み)
+  ansible.builtin.debug:
+    msg: "Docker は既にインストールされています"
+  when:
+    - environment_type | default('') != 'docker'
+    - docker_check.rc == 0
+
+- name: Docker 公式インストールスクリプトをダウンロード
+  ansible.builtin.get_url:
+    url: https://get.docker.com
+    dest: /tmp/get-docker.sh
+    mode: '0755'
+  when:
+    - environment_type | default('') != 'docker'
+    - docker_check.rc != 0
+
+- name: Docker をインストール
+  ansible.builtin.shell: /tmp/get-docker.sh
+  become: yes
+  when:
+    - environment_type | default('') != 'docker'
+    - docker_check.rc != 0
+
+- name: インストールスクリプトを削除
+  ansible.builtin.file:
+    path: /tmp/get-docker.sh
+    state: absent
+  when:
+    - environment_type | default('') != 'docker'
+    - docker_check.rc != 0
+
+- name: 現在のユーザーを docker グループに追加
+  ansible.builtin.user:
+    name: "{{ ansible_env.USER }}"
+    groups: docker
+    append: yes
+  become: yes
+  when:
+    - environment_type | default('') != 'docker'
+    - docker_check.rc != 0
+
+- name: Docker サービスを起動して有効化
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+  when:
+    - environment_type | default('') != 'docker'
+    - ansible_service_mgr == 'systemd'
+
+- name: Docker インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      Docker のインストールが完了しました！
+      ================================================
+
+      注意: docker グループの変更を反映するには、
+      ログアウトして再ログインするか、以下を実行してください:
+
+      newgrp docker
+
+      動作確認:
+      docker --version
+      docker run hello-world
+      ================================================
+  when:
+    - environment_type | default('') != 'docker'
+    - docker_check.rc != 0

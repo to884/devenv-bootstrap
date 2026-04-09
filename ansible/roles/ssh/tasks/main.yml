@@ -1,0 +1,22 @@
+---
+# ============================================================================
+# ssh ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   SSH サーバーの設定を行います
+#
+
+- name: OpenSSH サーバーをインストール
+  ansible.builtin.package:
+    name: openssh-server
+    state: present
+  become: yes
+
+- name: SSH サービスを有効化して起動
+  ansible.builtin.systemd:
+    name: ssh
+    enabled: yes
+    state: started
+  become: yes
+  when: ansible_service_mgr == "systemd"

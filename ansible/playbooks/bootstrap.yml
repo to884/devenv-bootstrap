@@ -1,0 +1,234 @@
+---
+# ============================================================================
+# ブートストラップ Playbook
+# ============================================================================
+#
+# 目的:
+#   初期環境セットアップを実行します
+#
+# 使用方法:
+#   # WSL環境の場合
+#   ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml
+#
+#   # Azure VM環境の場合
+#   ansible-playbook -i inventories/azure-vm/hosts playbooks/bootstrap.yml
+#
+#   # EC2環境の場合
+#   ansible-playbook -i inventories/ec2/hosts playbooks/bootstrap.yml
+#
+# Dry-run:
+#   ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --check
+#
+# ============================================================================
+
+- name: ブートストラップ - 共通セットアップ
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: セットアップ開始メッセージ
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          ブートストラップを開始します
+          ================================================
+          ホスト: {{ ansible_hostname }}
+          環境タイプ: {{ environment_type | default('unknown') }}
+          ディストリビューション: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          ================================================
+
+    - name: sudo 設定を適用
+      ansible.builtin.include_role:
+        name: sudo
+      tags:
+        - sudo
+        - security
+
+    - name: 共通パッケージとLinuxbrewをインストール
+      ansible.builtin.include_role:
+        name: common
+      tags:
+        - common
+        - packages
+
+    - name: topgrade をインストール
+      ansible.builtin.include_role:
+        name: topgrade
+      tags:
+        - topgrade
+
+    - name: uv をインストール
+      ansible.builtin.include_role:
+        name: uv
+      tags:
+        - uv
+        - python
+
+    - name: Node.js をインストール
+      ansible.builtin.include_role:
+        name: node
+      tags:
+        - node
+        - nodejs
+        - npm
+
+    - name: starship をインストール
+      ansible.builtin.include_role:
+        name: starship
+      tags:
+        - starship
+        - shell
+
+    - name: bat をインストール
+      ansible.builtin.include_role:
+        name: bat
+      tags:
+        - bat
+        - tools
+
+    - name: git-delta をインストール
+      ansible.builtin.include_role:
+        name: delta
+      tags:
+        - delta
+        - git
+        - tools
+
+    - name: GitHub CLI (gh) をインストール
+      ansible.builtin.include_role:
+        name: gh
+      tags:
+        - gh
+        - git
+        - github
+        - tools
+
+    - name: eza をインストール
+      ansible.builtin.include_role:
+        name: eza
+      tags:
+        - eza
+        - tools
+
+    - name: xh をインストール
+      ansible.builtin.include_role:
+        name: xh
+      tags:
+        - xh
+        - tools
+        - http
+
+    - name: tmux をインストール
+      ansible.builtin.include_role:
+        name: tmux
+      tags:
+        - tmux
+        - tools
+
+    - name: Docker をインストール
+      ansible.builtin.include_role:
+        name: docker_install
+      tags:
+        - docker
+        - docker_install
+
+    - name: SSH 設定を適用
+      ansible.builtin.include_role:
+        name: ssh
+      tags:
+        - ssh
+        - security
+
+- name: ブートストラップ - WSL固有の設定
+  hosts: wsl
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: WSL ロールを適用
+      ansible.builtin.include_role:
+        name: wsl
+      tags:
+        - wsl
+
+- name: ブートストラップ - Azure VM固有の設定
+  hosts: azure_vm
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Azure VM ロールを適用
+      ansible.builtin.include_role:
+        name: azure_vm
+      tags:
+        - azure_vm
+
+- name: ブートストラップ - EC2固有の設定
+  hosts: ec2
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: EC2 ロールを適用
+      ansible.builtin.include_role:
+        name: ec2
+      tags:
+        - ec2
+
+- name: ブートストラップ - Hyper-V固有の設定
+  hosts: hyperv
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Hyper-V ロールを適用
+      ansible.builtin.include_role:
+        name: hyperv
+      tags:
+        - hyperv
+
+- name: ブートストラップ - ベアメタル固有の設定
+  hosts: baremetal
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: ベアメタル ロールを適用
+      ansible.builtin.include_role:
+        name: baremetal
+      tags:
+        - baremetal
+
+- name: ブートストラップ - Docker固有の設定
+  hosts: docker
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Docker ロールを適用
+      ansible.builtin.include_role:
+        name: docker
+      tags:
+        - docker
+
+- name: ブートストラップ完了
+  hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: セットアップ完了メッセージ
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          ブートストラップが完了しました！
+          ================================================
+
+          次のステップ:
+          1. シェルを再起動するか、以下を実行してLinuxbrewを有効化:
+             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+          2. Linuxbrew の動作確認:
+             brew --version
+
+          ================================================

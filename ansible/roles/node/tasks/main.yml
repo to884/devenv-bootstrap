@@ -1,0 +1,65 @@
+---
+# ============================================================================
+# node ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   Node.js、npm、npx をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 注意事項:
+#   - node パッケージには npm と npx が含まれます
+#
+
+- name: Node.js をインストール
+  community.general.homebrew:
+    name: node
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: Node.js のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/node --version
+  register: node_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: npm のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/npm --version
+  register: npm_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: Node.js インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      Node.js のインストールが完了しました！
+      ================================================
+      Node.js: {{ node_version.stdout | default('確認失敗') }}
+      npm: {{ npm_version.stdout | default('確認失敗') }}
+
+      使用方法:
+      # パッケージをインストール
+      npm install <package>
+
+      # グローバルインストール
+      npm install -g <package>
+
+      # パッケージを実行（npx）
+      npx <package>
+
+      # 例: プロジェクトを初期化
+      npm init -y
+
+      # 例: create-react-appを実行
+      npx create-react-app my-app
+      ================================================
+  when: node_version.rc == 0

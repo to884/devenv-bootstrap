@@ -1,0 +1,10 @@
+# ============================================================================
+# ベアメタル インベントリ
+# ============================================================================
+
+[baremetal]
+localhost ansible_connection=local
+
+[baremetal:vars]
+ansible_python_interpreter=/usr/bin/python3
+environment_type=baremetal

@@ -1,0 +1,29 @@
+---
+# ============================================================================
+# wsl ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   WSL 固有の設定を行います
+#
+
+- name: WSL 環境を確認
+  ansible.builtin.debug:
+    msg: "WSL 環境でのセットアップを実行します"
+
+- name: /etc/wsl.conf を設定
+  ansible.builtin.copy:
+    dest: /etc/wsl.conf
+    content: |
+      [boot]
+      systemd=true
+
+      [network]
+      generateResolvConf = true
+
+      [interop]
+      enabled = true
+      appendWindowsPath = true
+    mode: '0644'
+  become: yes
+  when: environment_type == 'wsl'

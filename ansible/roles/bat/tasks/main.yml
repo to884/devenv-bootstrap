@@ -1,0 +1,58 @@
+---
+# ============================================================================
+# bat ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   bat（構文ハイライト機能付きcatの改良版）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - bat: https://github.com/sharkdp/bat
+#
+
+- name: bat をインストール
+  community.general.homebrew:
+    name: bat
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: bat のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/bat --version
+  register: bat_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: bat インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      bat のインストールが完了しました！
+      ================================================
+      バージョン: {{ bat_version.stdout | default('確認失敗') }}
+
+      使用方法:
+      # ファイルを表示（構文ハイライト付き）
+      bat <filename>
+
+      # 行番号を表示
+      bat --line-range 1:20 <filename>
+
+      # Gitの差分を確認
+      bat --diff <filename>
+
+      # テーマ一覧を表示
+      bat --list-themes
+
+      # エイリアスを設定（オプション）
+      echo 'alias cat="bat"' >> ~/.bashrc
+
+      公式サイト: https://github.com/sharkdp/bat
+      ================================================
+  when: bat_version.rc == 0

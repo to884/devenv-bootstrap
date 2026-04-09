@@ -1,0 +1,90 @@
+---
+# ============================================================================
+# starship ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   starship（高速でカスタマイズ可能なシェルプロンプト）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - starship: https://starship.rs/
+#
+
+- name: starship をインストール
+  community.general.homebrew:
+    name: starship
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: starship を .bashrc に追加
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'eval "$(starship init bash)"'
+    create: yes
+    state: present
+  become: no
+
+- name: starship を .zshrc に追加 (zsh がインストールされている場合)
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'eval "$(starship init zsh)"'
+    create: yes
+    state: present
+  become: no
+  when: ansible_facts['ansible_env'].SHELL is defined and 'zsh' in ansible_facts['ansible_env'].SHELL
+  ignore_errors: yes
+
+- name: .config ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: starship.toml 設定ファイルをコピー
+  ansible.builtin.copy:
+    src: starship.toml
+    dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    mode: '0644'
+    force: no
+  become: no
+
+- name: starship のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/starship --version
+  register: starship_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: starship インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      starship のインストールが完了しました！
+      ================================================
+      バージョン: {{ starship_version.stdout | default('確認失敗') }}
+
+      設定済み:
+      - .bashrc に starship を追加しました
+      - .zshrc に starship を追加しました（zsh の場合）
+      - ~/.config/starship.toml に設定ファイルを配置しました
+
+      使用方法:
+      # 新しいシェルセッションを開始するか、以下を実行:
+      source ~/.bashrc
+
+      # 設定ファイルをカスタマイズ:
+      vim ~/.config/starship.toml
+
+      # プリセット一覧:
+      starship preset
+
+      公式サイト: https://starship.rs/
+      ================================================
+  when: starship_version.rc == 0

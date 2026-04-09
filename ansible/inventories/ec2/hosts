@@ -1,0 +1,11 @@
+# ============================================================================
+# AWS EC2 インベントリ
+# ============================================================================
+
+[ec2]
+localhost ansible_connection=local
+
+[ec2:vars]
+ansible_python_interpreter=/usr/bin/python3
+environment_type=ec2
+cloud_provider=aws

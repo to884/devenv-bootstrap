@@ -1,0 +1,46 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# トップレベルのEditorConfig設定
+root = true
+
+# すべてのファイルに適用される設定
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Bashスクリプト
+[*.sh]
+indent_style = space
+indent_size = 4
+
+# YAML ファイル（Ansible playbooks, roles, inventoriesなど）
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# JSON ファイル
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Markdown ファイル
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
+
+# Python ファイル
+[*.py]
+indent_style = space
+indent_size = 4
+
+# Makefiles（タブを使用）
+[Makefile]
+indent_style = tab
+
+# Git関連ファイル
+[.gitignore]
+indent_style = space
+indent_size = 2

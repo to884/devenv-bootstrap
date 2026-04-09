@@ -1,0 +1,59 @@
+---
+# ============================================================================
+# azure_vm ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   Azure VM 固有の設定を行います
+#
+
+- name: Azure VM 環境を確認
+  ansible.builtin.debug:
+    msg: "Azure VM 環境でのセットアップを実行します"
+
+- name: Linuxbrew の存在を確認
+  ansible.builtin.stat:
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  register: linuxbrew_check
+
+- name: Azure CLI がインストール済みか確認
+  ansible.builtin.command: which az
+  register: az_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Azure CLI をインストール (Linuxbrew経由)
+  community.general.homebrew:
+    name: azure-cli
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+  when:
+    - environment_type == 'azure_vm'
+    - linuxbrew_check.stat.exists
+    - az_check.rc != 0
+
+- name: Azure CLI をインストール (Debian系: Linuxbrew非使用時)
+  ansible.builtin.shell: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+  args:
+    creates: /usr/bin/az
+  become: yes
+  when:
+    - environment_type == 'azure_vm'
+    - not linuxbrew_check.stat.exists
+    - ansible_facts['os_family'] == "Debian"
+    - az_check.rc != 0
+
+- name: Azure CLI をインストール (RHEL系: Linuxbrew非使用時)
+  ansible.builtin.shell: |
+    curl -sL https://aka.ms/InstallAzureCLIRPM | bash
+  args:
+    creates: /usr/bin/az
+  become: yes
+  when:
+    - environment_type == 'azure_vm'
+    - not linuxbrew_check.stat.exists
+    - ansible_facts['os_family'] == "RedHat"
+    - az_check.rc != 0

@@ -1,0 +1,109 @@
+---
+# ============================================================================
+# linuxbrew ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   Homebrew on Linux (Linuxbrew) をインストールします。
+#
+# 要件:
+#   - Git
+#   - curl
+#   - build-essential (Ubuntu/Debian) または Development Tools (RHEL系)
+#
+
+- name: Linuxbrew の依存パッケージをインストール (Ubuntu/Debian)
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - procps
+      - curl
+      - file
+      - git
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+  become: yes
+
+- name: Linuxbrew の依存パッケージをインストール (RHEL/CentOS/Fedora)
+  ansible.builtin.dnf:
+    name:
+      - gcc
+      - gcc-c++
+      - make
+      - procps-ng
+      - curl
+      - file
+      - git
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+  become: yes
+
+- name: Linuxbrew の依存パッケージをインストール (Arch Linux)
+  community.general.pacman:
+    name:
+      - base-devel
+      - procps-ng
+      - curl
+      - file
+      - git
+    state: present
+  when: ansible_facts['os_family'] == "Archlinux"
+  become: yes
+
+- name: Linuxbrew がすでにインストールされているか確認
+  ansible.builtin.stat:
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  register: brew_installed
+
+- name: Linuxbrew インストールスクリプトをダウンロード
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+    dest: /tmp/brew-install.sh
+    mode: '0755'
+  when: not brew_installed.stat.exists
+
+- name: Linuxbrew をインストール
+  ansible.builtin.shell: |
+    NONINTERACTIVE=1 /tmp/brew-install.sh
+  args:
+    creates: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    CI: "true"
+  become: no
+  when: not brew_installed.stat.exists
+
+- name: インストールスクリプトを削除
+  ansible.builtin.file:
+    path: /tmp/brew-install.sh
+    state: absent
+  when: not brew_installed.stat.exists
+
+- name: Linuxbrew を PATH に追加 (.bashrc)
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    create: yes
+    state: present
+  become: no
+
+- name: Linuxbrew を PATH に追加 (.zshrc - zsh がインストールされている場合)
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    create: yes
+    state: present
+  become: no
+  when: ansible_facts['ansible_env'].SHELL is defined and 'zsh' in ansible_facts['ansible_env'].SHELL
+  ignore_errors: yes
+
+- name: Linuxbrew のインストール状態を確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew --version
+  register: brew_version
+  changed_when: false
+  failed_when: false
+
+- name: Linuxbrew のバージョンを表示
+  ansible.builtin.debug:
+    msg: "Linuxbrew インストール完了: {{ brew_version.stdout_lines[0] | default('バージョン確認失敗') }}"
+  when: brew_version.rc == 0

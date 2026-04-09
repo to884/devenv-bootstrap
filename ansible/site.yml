@@ -1,0 +1,24 @@
+---
+# ============================================================================
+# サイト全体 Playbook
+# ============================================================================
+#
+# 目的:
+#   すべての環境に対してブートストラップを実行するエントリーポイント
+#
+# 使用方法:
+#   # 特定の環境を指定して実行
+#   ansible-playbook -i inventories/wsl/hosts site.yml
+#   ansible-playbook -i inventories/azure-vm/hosts site.yml
+#   ansible-playbook -i inventories/ec2/hosts site.yml
+#   ansible-playbook -i inventories/hyperv/hosts site.yml
+#   ansible-playbook -i inventories/baremetal/hosts site.yml
+#   ansible-playbook -i inventories/docker/hosts site.yml
+#
+#   # 複数のインベントリを指定（カンマ区切り）
+#   ansible-playbook -i inventories/wsl/hosts,inventories/docker/hosts site.yml
+#
+# ============================================================================
+
+- name: サイト全体セットアップ
+  import_playbook: playbooks/bootstrap.yml

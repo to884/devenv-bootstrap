@@ -1,0 +1,57 @@
+---
+# ============================================================================
+# gh ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   GitHub CLI (gh) をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - GitHub CLI: https://cli.github.com/
+#
+
+- name: GitHub CLI (gh) をインストール
+  community.general.homebrew:
+    name: gh
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: gh のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/gh --version
+  register: gh_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: gh インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      GitHub CLI (gh) のインストールが完了しました！
+      ================================================
+      バージョン: {{ gh_version.stdout_lines[0] | default('確認失敗') }}
+
+      使用方法:
+      # GitHub にログイン
+      gh auth login
+
+      # リポジトリをクローン
+      gh repo clone <owner>/<repo>
+
+      # issue を表示
+      gh issue list
+
+      # pull request を作成
+      gh pr create
+
+      # コマンドヘルプを表示
+      gh help
+
+      詳細: https://cli.github.com/manual/
+      ================================================

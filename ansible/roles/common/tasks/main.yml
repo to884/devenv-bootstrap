@@ -1,0 +1,24 @@
+---
+# ============================================================================
+# common ロール - メインタスク
+# ============================================================================
+#
+# 目的:
+#   すべての環境で共通に必要なセットアップを実行します
+#
+
+- name: 基本パッケージをインストール
+  ansible.builtin.package:
+    name:
+      - git
+      - curl
+      - wget
+      - vim
+      - htop
+    state: present
+  become: yes
+
+- name: Linuxbrew をインストール
+  ansible.builtin.include_tasks: linuxbrew.yml
+  tags:
+    - linuxbrew

@@ -1,0 +1,61 @@
+---
+# ============================================================================
+# eza ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   eza（lsの現代的な代替ツール）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - eza: https://github.com/eza-community/eza
+#
+
+- name: eza をインストール
+  community.general.homebrew:
+    name: eza
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: eza のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/eza --version
+  register: eza_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: eza インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      eza のインストールが完了しました！
+      ================================================
+      バージョン: {{ eza_version.stdout | default('確認失敗') }}
+
+      使用方法:
+      # 基本的なリスト表示
+      eza
+
+      # 詳細表示（long format）
+      eza -l
+
+      # アイコン付き表示
+      eza --icons
+
+      # ツリー表示
+      eza --tree
+
+      # Git情報付き詳細表示
+      eza -l --git
+
+      エイリアス推奨:
+      alias ls='eza'
+      alias ll='eza -l --icons --git'
+      alias la='eza -la --icons --git'
+      alias lt='eza --tree --icons'
+      ================================================

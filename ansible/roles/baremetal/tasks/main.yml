@@ -1,0 +1,19 @@
+---
+# ============================================================================
+# baremetal ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   ベアメタル環境固有の設定を行います
+#
+
+- name: ベアメタル環境を確認
+  ansible.builtin.debug:
+    msg: "ベアメタル環境でのセットアップを実行します"
+
+- name: ハードウェア情報を表示
+  ansible.builtin.debug:
+    msg: |
+      CPU: {{ ansible_processor_vcpus }} vCPUs
+      Memory: {{ ansible_memtotal_mb }} MB
+      Architecture: {{ ansible_architecture }}

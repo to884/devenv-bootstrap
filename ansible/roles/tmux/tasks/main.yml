@@ -1,0 +1,146 @@
+---
+# ============================================================================
+# tmux ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   tmux（ターミナルマルチプレクサ）と PowerLine をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#   - Python 3.8 以上がインストール済みであること
+#
+# 参考:
+#   - tmux: https://github.com/tmux/tmux
+#   - tpm: https://github.com/tmux-plugins/tpm
+#   - PowerLine: https://powerline.readthedocs.io/
+#
+
+- name: tmux をインストール
+  community.general.homebrew:
+    name: tmux
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: tpm（tmux plugin manager）をクローン
+  ansible.builtin.git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    update: no
+  become: no
+
+- name: PowerLine と拡張セグメントをインストール (pip3)
+  ansible.builtin.pip:
+    name:
+      - powerline-status
+      - powerline-mem-segment
+    state: present
+    executable: pip3
+    extra_args: --user
+  become: no
+
+- name: PowerLine のインストールパスを確認
+  ansible.builtin.shell: |
+    python3 -c "import site; print(site.getsitepackages()[0])"
+  register: python_site_packages
+  changed_when: false
+  become: no
+
+- name: .config ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: .config/powerline ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/powerline"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: PowerLine 設定ファイルをコピー
+  ansible.builtin.copy:
+    src: powerline/
+    dest: "{{ ansible_env.HOME }}/.config/powerline/"
+    mode: '0644'
+    force: no
+  become: no
+
+- name: .tmux.conf 設定ファイルをコピー
+  ansible.builtin.copy:
+    src: .tmux.conf
+    dest: "{{ ansible_env.HOME }}/.tmux.conf"
+    mode: '0644'
+    force: no
+  become: no
+
+- name: .tmux.conf 内の PowerLine パスを更新
+  ansible.builtin.replace:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+    regexp: '~/.local/lib/python3\.8/site-packages'
+    replace: "{{ python_site_packages.stdout }}"
+  become: no
+
+- name: tmux のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/tmux -V
+  register: tmux_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: PowerLine のバージョンを確認
+  ansible.builtin.command: powerline --version
+  register: powerline_version
+  changed_when: false
+  failed_when: false
+
+- name: tmux インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      tmux と PowerLine のインストールが完了しました！
+      ================================================
+      tmux バージョン: {{ tmux_version.stdout | default('確認失敗') }}
+      PowerLine バージョン: {{ powerline_version.stdout | default('確認失敗') }}
+      Python site-packages: {{ python_site_packages.stdout | default('確認失敗') }}
+
+      インストール済みコンポーネント:
+      - powerline-status (ステータスライン表示)
+      - powerline-mem-segment (メモリ使用量セグメント)
+
+      設定済み:
+      - ~/.tmux.conf に設定ファイルを配置しました
+      - ~/.config/powerline/ に PowerLine 設定を配置しました
+      - ~/.tmux/plugins/tpm に tpm（プラグインマネージャー）をインストールしました
+
+      使用方法:
+      # tmux を起動して、プラグインをインストール
+      tmux
+      # tmux 内で以下のキーを押す:
+      Prefix + I (大文字の I) でプラグインをインストール
+
+      # プレフィックスキー（この設定では Ctrl+t）
+      # デフォルトの Ctrl+b から変更されています
+
+      # 基本操作:
+      Ctrl+t d         - デタッチ
+      Ctrl+t c         - 新しいウィンドウ
+      Ctrl+t n/p       - 次/前のウィンドウ
+      Ctrl+Shift+→/←   - ウィンドウ移動
+      Ctrl+↑↓←→       - ペイン移動
+      Ctrl+t r         - .tmux.conf リロード
+
+      設定ファイル:
+      ~/.tmux.conf       - tmux メイン設定
+      ~/.config/powerline/ - PowerLine 設定
+
+      PowerLine カスタマイズ:
+      メモリセグメントを有効にするには、
+      ~/.config/powerline/themes/tmux/tmux-theme.json を編集してください
+
+      ================================================

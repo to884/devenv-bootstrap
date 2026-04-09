@@ -1,0 +1,33 @@
+---
+# ============================================================================
+# グローバル変数定義
+# ============================================================================
+#
+# すべてのホストとグループに適用される変数
+#
+
+# Python インタープリター
+ansible_python_interpreter: /usr/bin/python3
+
+# ユーザー設定
+default_user: "{{ ansible_env.USER | default('ansible') }}"
+default_shell: /bin/bash
+
+# Linuxbrew 設定
+linuxbrew_path: /home/linuxbrew/.linuxbrew
+linuxbrew_bin: "{{ linuxbrew_path }}/bin/brew"
+
+# プロキシ設定（必要に応じて環境変数から取得）
+http_proxy: "{{ lookup('env', 'http_proxy') | default('') }}"
+https_proxy: "{{ lookup('env', 'https_proxy') | default('') }}"
+no_proxy: "{{ lookup('env', 'no_proxy') | default('') }}"
+
+# SSH 設定
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+
+# セキュリティ設定
+sudo_nopasswd: yes
+keep_proxy_env: yes
+keep_editor_env: yes

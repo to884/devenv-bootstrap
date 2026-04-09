@@ -1,0 +1,64 @@
+---
+# ============================================================================
+# ec2 ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   AWS EC2 固有の設定を行います
+#
+
+- name: EC2 環境を確認
+  ansible.builtin.debug:
+    msg: "EC2 環境でのセットアップを実行します"
+
+- name: Linuxbrew の存在を確認
+  ansible.builtin.stat:
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  register: linuxbrew_check
+
+- name: AWS CLI がインストール済みか確認
+  ansible.builtin.command: which aws
+  register: aws_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: AWS CLI をインストール (Linuxbrew経由)
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew install awscli
+  when:
+    - environment_type == 'ec2'
+    - linuxbrew_check.stat.exists
+    - aws_check.rc != 0
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: AWS CLI v2 をインストール (Linuxbrew非使用時)
+  block:
+    - name: AWS CLI インストーラーをダウンロード
+      ansible.builtin.get_url:
+        url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+        dest: /tmp/awscliv2.zip
+        mode: '0644'
+
+    - name: AWS CLI を展開
+      ansible.builtin.unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp/
+        remote_src: yes
+
+    - name: AWS CLI をインストール
+      ansible.builtin.command: /tmp/aws/install
+      args:
+        creates: /usr/local/bin/aws
+      become: yes
+
+    - name: インストーラーを削除
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/awscliv2.zip
+        - /tmp/aws
+  when:
+    - environment_type == 'ec2'
+    - not linuxbrew_check.stat.exists
+    - aws_check.rc != 0

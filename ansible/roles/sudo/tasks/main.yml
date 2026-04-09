@@ -1,0 +1,60 @@
+---
+# ============================================================================
+# sudoers ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   sudoersファイルを安全に編集し、以下の設定を追加します:
+#   - プロキシ環境変数の保持
+#   - EDITOR環境変数の保持
+#   - sudoグループにパスワードなしsudo権限を付与
+#
+# 注意:
+#   sudoersファイルの編集は慎重に行う必要があります。
+#   このロールは /etc/sudoers.d/ ディレクトリに設定ファイルを作成します。
+#
+
+- name: sudoers.d ディレクトリが存在することを確認
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    mode: '0750'
+    owner: root
+    group: root
+
+- name: プロキシ環境変数を保持する設定を追加
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/90-env-keep-proxy
+    line: 'Defaults:%sudo env_keep += "http_proxy https_proxy ftp_proxy all_proxy no_proxy"'
+    create: yes
+    mode: '0440'
+    owner: root
+    group: root
+    validate: '/usr/sbin/visudo -cf %s'
+  register: proxy_config
+
+- name: EDITOR環境変数を保持する設定を追加
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/90-env-keep-editor
+    line: 'Defaults:%sudo env_keep += "EDITOR"'
+    create: yes
+    mode: '0440'
+    owner: root
+    group: root
+    validate: '/usr/sbin/visudo -cf %s'
+  register: editor_config
+
+- name: sudoグループにパスワードなしsudo権限を付与
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/90-sudo-nopasswd
+    line: '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL'
+    create: yes
+    mode: '0440'
+    owner: root
+    group: root
+    validate: '/usr/sbin/visudo -cf %s'
+  register: nopasswd_config
+
+- name: sudoers設定の変更を確認
+  ansible.builtin.debug:
+    msg: "sudoers設定を更新しました: プロキシ={{ proxy_config.changed }}, EDITOR={{ editor_config.changed }}, NOPASSWD={{ nopasswd_config.changed }}"
