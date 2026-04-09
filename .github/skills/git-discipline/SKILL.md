@@ -57,13 +57,13 @@ All branch names MUST follow this format:
 
 ### Allowed Types
 
-- feature
-- fix
-- hotfix
-- refactor
-- chore
-- docs
-- test
+- ✨ feature
+- 🐛 fix
+- 🚑 hotfix
+- ♻️ refactor
+- 🔧 chore
+- 📝 docs
+- ✅ test
 
 ### Naming Rules
 
@@ -105,14 +105,14 @@ All commit messages MUST follow the Conventional Commits format:
 
 ### Allowed Types
 
-- feat: new features
-- fix: bug fixes
-- docs: documentation-only changes
-- style: formatting, linting (no logic change)
-- refactor: internal refactoring without behavior change
-- perf: performance improvements
-- test: adding or fixing tests
-- chore: build, CI, tooling, dependency updates
+- ✨ feat: new features
+- 🐛 fix: bug fixes
+- 📝 docs: documentation-only changes
+- 💄 style: formatting, linting (no logic change)
+- ♻️ refactor: internal refactoring without behavior change
+- ⚡ perf: performance improvements
+- ✅ test: adding or fixing tests
+- 🔧 chore: build, CI, tooling, dependency updates
 
 ### Scope Rules
 
