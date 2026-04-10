@@ -114,6 +114,15 @@
         - ai
         - tools
 
+    - name: Databricks CLI をインストール
+      ansible.builtin.include_role:
+        name: databricks_cli
+      tags:
+        - databricks_cli
+        - databricks
+        - data
+        - tools
+
     - name: eza をインストール
       ansible.builtin.include_role:
         name: eza

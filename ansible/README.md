@@ -48,32 +48,36 @@
    - AI搭載のコマンドライン支援ツール (Linuxbrew経由)
    - シェルコマンド、Git操作の提案、コマンドの説明
 
-11. **eza インストール**
+11. **Databricks CLI インストール**
+   - Databricks ワークスペース管理ツール (Linuxbrew経由)
+   - クラスター、ジョブ、ワークスペースの管理をCLIから実行
+
+12. **eza インストール**
    - lsコマンドの現代的な代替ツール (Linuxbrew経由)
    - アイコン表示、Git統合、ツリー表示
 
-12. **chezmoi インストール**
+13. **chezmoi インストール**
    - ドットファイル管理ツール chezmoi (Linuxbrew経由)
    - dotfilesの初期化・適用が簡単
 
-13. **xh インストール**
+14. **xh インストール**
    - HTTPクライアントツール (Linuxbrew経由)
    - curlやhttpieの代替、Rust製で高速
 
-14. **tmux インストール**
+15. **tmux インストール**
    - ターミナルマルチプレクサ (Linuxbrew経由)
    - 複数のシェルセッションを管理、Powerline統合
 
-15. **Docker インストール**
+16. **Docker インストール**
    - Docker Engine の公式スクリプト経由インストール
    - ユーザーを docker グループに追加
    - Docker環境では自動スキップ
 
-16. **SSH設定**
+17. **SSH設定**
    - OpenSSH serverのインストールと設定
    - systemdサービスの有効化
 
-17. **環境固有の設定**
+18. **環境固有の設定**
    - WSL: /etc/wsl.conf の設定、systemd有効化
    - Azure VM: Azure CLI のインストール
    - EC2: AWS CLI v2 のインストール
@@ -198,6 +202,9 @@ ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --tags gh
 
 # GitHub Copilot CLIのみインストール
 ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --tags copilot_cli
+
+# Databricks CLIのみインストール
+ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --tags databricks_cli
 
 # ezaのみインストール
 ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --tags eza
@@ -560,6 +567,66 @@ cd my-git-repo        # Git ブランチとステータスが表示される
 ```
 
 公式サイト: https://starship.rs/
+
+### databricks_cli ロール
+
+**目的**: Databricks CLI をインストール
+
+**実行内容**:
+- Linuxbrew 経由で Databricks CLI をインストール
+- Databricks ワークスペース、クラスター、ジョブの管理ツール
+
+**前提条件**:
+- Linuxbrew がインストール済みであること
+
+**特徴**:
+- Databricks ワークスペースの管理: ノートブック、ジョブ、クラスターをCLIから操作
+- 認証管理: トークンベースの認証をサポート
+- バンドル機能: アセットのバンドル化とデプロイを自動化
+- REST API統合: Databricks の全機能にアクセス可能
+
+**インストール後**:
+
+動作確認:
+```bash
+# バージョン確認
+databricks --version
+```
+
+使用例:
+```bash
+# 認証設定（対話的）
+databricks configure --token
+
+# ワークスペース一覧を取得
+databricks workspace list /
+
+# クラスター一覧を表示
+databricks clusters list
+
+# ジョブ一覧を表示
+databricks jobs list
+
+# ノートブックをエクスポート
+databricks workspace export /Users/user@example.com/notebook notebook.py
+
+# ノートブックをインポート
+databricks workspace import notebook.py /Users/user@example.com/notebook
+
+# バンドルの検証
+databricks bundle validate
+
+# バンドルのデプロイ
+databricks bundle deploy
+```
+
+設定ファイル:
+```bash
+# 認証情報は ~/.databrickscfg に保存されます
+cat ~/.databrickscfg
+```
+
+公式サイト: https://docs.databricks.com/dev-tools/cli/index.html
 
 ### bat ロール
 
