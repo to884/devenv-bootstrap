@@ -1,0 +1,59 @@
+---
+# ============================================================================
+# copilot_cli ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   GitHub Copilot CLI をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - GitHub Copilot CLI: https://githubnext.com/projects/copilot-cli
+#   - GitHub Docs: https://docs.github.com/en/copilot/github-copilot-in-the-cli
+#
+
+- name: GitHub Copilot CLI をインストール
+  community.general.homebrew:
+    name: copilot-cli
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: GitHub Copilot CLI のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/github-copilot-cli --version
+  register: copilot_cli_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: GitHub Copilot CLI インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      GitHub Copilot CLI のインストールが完了しました！
+      ================================================
+      バージョン: {{ copilot_cli_version.stdout | default('確認失敗') }}
+
+      使用方法:
+      # GitHub Copilot CLI の認証
+      github-copilot-cli auth
+
+      # シェルコマンドの提案を受ける
+      github-copilot-cli what-the-shell
+
+      # Git コマンドの提案を受ける
+      github-copilot-cli git-assist
+
+      # 一般的な説明を受ける
+      github-copilot-cli explain
+
+      エイリアス設定例（.bashrc や .zshrc に追加）:
+      alias '??'='github-copilot-cli what-the-shell'
+      alias 'git?'='github-copilot-cli git-assist'
+      alias 'gh?'='github-copilot-cli gh-assist'
+
+      ================================================

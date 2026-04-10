@@ -104,6 +104,16 @@
         - github
         - tools
 
+    - name: GitHub Copilot CLI をインストール
+      ansible.builtin.include_role:
+        name: copilot_cli
+      tags:
+        - copilot_cli
+        - copilot
+        - github
+        - ai
+        - tools
+
     - name: eza をインストール
       ansible.builtin.include_role:
         name: eza

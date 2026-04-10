@@ -16,6 +16,9 @@
 ### Git設定
 - `~/.gitconfig` - Git全体設定（delta、エイリアス、ユーザー情報）
 
+### SSH設定
+- `~/.ssh/config` - SSH クライアント設定（接続設定、ホスト別設定、セキュリティ設定）
+
 ### ターミナルツール設定
 - `~/.tmux.conf` - tmux設定（キーバインド、プラグイン）
 - `~/.config/powerline/` - PowerLine設定（ステータスバー）
