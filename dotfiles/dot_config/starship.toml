@@ -106,14 +106,14 @@ scan_timeout = 30
 command_timeout = 500
 
 [aws]
-symbol = "[](fg:#F0861E)"
+symbol = "[](fg:#F0861E)"
 format = '[on](fg:#9DCBEF) [$symbol ($profile )(\($region\) )(\[$duration\])]($style)'
 style = "fg:#A65117"
 disabled = false
 
 [azure]
 format = "[on](fg:#9DCBEF) [$symbol( $subscription)]($style)"
-symbol = "[ﴃ](fg:#0078D4)"
+symbol = "[](fg:#0078D4)"
 style = "fg:#599CE4"
 disabled = false
 
@@ -129,8 +129,7 @@ charging_symbol = "[ ](fg:green)"
 discharging_symbol = "[💦](fg:yellow)"
 unknown_symbol = "[ ](fg:gray)"
 empty_symbol = "[ ](fg:red)"
-style = "fg:#0C5DA5"
-format = "[$symbol:$persentage]($style)"
+format = "[$symbol:$persentage](fg:#0C5DA5)"
 disabled = false
 
 [c]
@@ -142,22 +141,22 @@ success_symbol = "[➡](bold fg:#00ff00)"
 error_symbol = "[](bold fg:#ff0000)"
 
 [directory]
-home_symbol = ""
+home_symbol = "🏠"
 truncation_symbol = "…/"
 read_only = " "
 read_only_style = "fg:#fbbc05 bg:#174276"
 repo_root_style = "fg:#ffffff bg:#174276"
-repo_root_format=" [$before_root_path]($style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+repo_root_format="󰊢 [$before_root_path]($style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 style = "bg:#174276 fg:white"
 use_os_path_sep = true
 format = "[ﱮ](fg:#ffffff bg:#174276) [$path]($style)[$read_only]($read_only_style) "
 
 [docker_context]
-symbol = ""
+symbol = ""
 disabled = false
 
 [dotnet]
-symbol = "[](fg:#9DCBEF bold)"
+symbol = "[](fg:#9DCBEF bold)"
 style = "fg:#0078D4"
 format = "[$symbol ($version )([什](fg:#9DCBEF) $tfm)]($style)"
 
@@ -168,7 +167,7 @@ style = "fg:#778997"
 [git_branch]
 format = "[ $symbol $branch ]($style)"
 style = "bg:#0C5DA5 fg:white"
-symbol = "שׂ"
+symbol = ""
 
 [git_commit]
 style = "bg:#0078D4"
@@ -178,27 +177,24 @@ format = '[\($state( $progress_current of $progress_total)\)]($style) '
 cherry_pick = " PICKING"
 style = "bg:#0078D4"
 
-[git_metrics]
-style = "bg:#0078D4"
-
 [git_status]
 format = "[ $all_status$ahead_behind ]($style)"
 style = "bg:#0078D4"
 conflicted = "[ ](fg:#ea4353 bg:#0078D4)"
-ahead = "省 "
-behind = " "
-diverged = " "
-untracked = "[？ ](fg:#ffffff bg:#0078d4 bold)"
-stashed = " "
-modified = "פֿ "
-staged = '[( \($count\)) ](fg:#ffffff bg:#0078D4 bold)'
+ahead = "⬆${count}"
+behind = "⬇${count}"
+diverged = "↕⬆${ahead_count}⬇${behind_count} "
+untracked = "[ ](fg:#ffffff bg:#0078d4 bold)"
+stashed = " "
+modified = "󱈸 "
+staged = '[( \($count\)) ](fg:#ffffff bg:#0078D4 bold)'
 up_to_date = "[ ](fg:#ffffff bg:#0078D4)"
-renamed = "凜 "
+renamed = "󰑕 "
 deleted = " "
 
 [hostname]
 ssh_only = false
-ssh_symbol = "廬 "
+ssh_symbol = "🌐 "
 trim_at = ""
 style = "bold fg:#0078D4"
 format = "[(@$hostname) $ssh_symbol]($style)"
@@ -206,13 +202,13 @@ disabled = false
 
 [localip]
 ssh_only = false
-format = "[](fg:#9DCBEF) [$localipv4](fg:#0078D4)"
+format = "[󰌗](fg:#9DCBEF) [$localipv4](fg:#0078D4)"
 disabled = false
 
 [memory_usage]
 format = "[$symbol](fg:#9DCBEF) [$ram](fg:#599CE4)( [|](fg:#9DCBEF) [$swap](fg:#0078D4))($style)"
 threshold = -1
-symbol = ""
+symbol = "󰍛"
 style = "fg:#9DCBEF"
 disabled = false
 
@@ -241,6 +237,10 @@ disabled = false
 format = "[  $time ]($style)"
 style = "bg:#3393DD fg:white"
 
+[sudo]
+disabled = false
+symbol = "🦸 "
+
 [username]
 style_root = "bold fg:#DC322F"
 style_user = "bold fg:#3393DD"
@@ -257,7 +257,7 @@ style = "bold yellow"
 # Python
 [python]
 format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-symbol = " "
+symbol = "󰌠"
 style = "yellow bold"
 pyenv_version_name = false
 detect_extensions = ["py"]
@@ -267,7 +267,7 @@ detect_folders = []
 # Node.js
 [nodejs]
 format = "via [$symbol($version )]($style)"
-symbol = " "
+symbol = ""
 style = "bold green"
 detect_extensions = ["js", "mjs", "cjs", "ts", "mts", "cts"]
 detect_files = ["package.json", ".node-version", ".nvmrc"]
@@ -276,11 +276,11 @@ detect_folders = ["node_modules"]
 # Rust
 [rust]
 format = "via [$symbol($version )]($style)"
-symbol = " "
+symbol = ""
 style = "bold red"
 
 # Kubernetes
 [kubernetes]
-format = 'on [󱃾 $context\($namespace\)]($style) '
+format = 'on [ $context\($namespace\)]($style) '
 style = "cyan bold"
 disabled = false
