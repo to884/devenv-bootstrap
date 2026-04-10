@@ -28,6 +28,7 @@
     create: yes
     state: present
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: starship を .zshrc に追加 (zsh がインストールされている場合)
   ansible.builtin.lineinfile:
@@ -36,7 +37,9 @@
     create: yes
     state: present
   become: no
-  when: ansible_facts['ansible_env'].SHELL is defined and 'zsh' in ansible_facts['ansible_env'].SHELL
+  when:
+    - not use_chezmoi_for_dotfiles
+    - ansible_facts['ansible_env'].SHELL is defined and 'zsh' in ansible_facts['ansible_env'].SHELL
   ignore_errors: yes
 
 - name: .config ディレクトリを作成
@@ -45,6 +48,7 @@
     state: directory
     mode: '0755'
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: starship.toml 設定ファイルをコピー
   ansible.builtin.copy:
@@ -53,6 +57,7 @@
     mode: '0644'
     force: no
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: starship のバージョンを確認
   ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/starship --version

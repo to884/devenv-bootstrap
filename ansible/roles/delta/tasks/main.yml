@@ -35,6 +35,7 @@
     scope: global
     value: delta
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: Git に delta を interactive diffFilter として設定
   community.general.git_config:
@@ -42,6 +43,7 @@
     scope: global
     value: delta --color-only
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: delta のナビゲーション機能を有効化
   community.general.git_config:
@@ -49,6 +51,7 @@
     scope: global
     value: "true"
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: Git のマージコンフリクトスタイルを zdiff3 に設定
   community.general.git_config:
@@ -56,6 +59,7 @@
     scope: global
     value: zdiff3
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: Git の diff で移動したコードの色分けを有効化
   community.general.git_config:
@@ -63,6 +67,7 @@
     scope: global
     value: default
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: git-delta インストール完了メッセージ
   ansible.builtin.debug:

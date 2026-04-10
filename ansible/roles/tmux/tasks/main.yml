@@ -61,6 +61,7 @@
     state: directory
     mode: '0755'
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: PowerLine 設定ファイルをコピー
   ansible.builtin.copy:
@@ -69,6 +70,7 @@
     mode: '0644'
     force: no
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: .tmux.conf 設定ファイルをコピー
   ansible.builtin.copy:
@@ -77,6 +79,7 @@
     mode: '0644'
     force: no
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: .tmux.conf 内の PowerLine パスを更新
   ansible.builtin.replace:

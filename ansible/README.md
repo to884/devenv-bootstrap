@@ -44,6 +44,12 @@
    - lsコマンドの現代的な代替ツール (Linuxbrew経由)
    - アイコン表示、Git統合、ツリー表示
 
+10. **chezmoi インストール**
+   - ドットファイル管理ツール chezmoi (Linuxbrew経由)
+   - dotfilesの初期化・適用が簡単
+
+11. **Docker インストール**
+
 10. **Docker インストール**
    - Docker Engine の公式スクリプト経由インストール
    - ユーザーを docker グループに追加
@@ -71,6 +77,27 @@ Ansibleがインストールされている必要があります。`bootstrap.sh
 # リポジトリのルートディレクトリで実行
 ./bootstrap.sh
 source ~/.ansible-venv/bin/activate
+```
+
+### dotfiles管理方法の選択
+
+`group_vars/all.yml` で設定ファイルの管理方法を選択できます：
+
+```yaml
+# chezmoi で dotfiles を管理する場合は true に設定
+use_chezmoi_for_dotfiles: false  # デフォルト: Ansibleで管理
+```
+
+**推奨**: `use_chezmoi_for_dotfiles: true` に設定し、以下のワークフローを使用：
+
+```bash
+# 1. Ansibleでシステム基盤とパッケージをインストール
+cd ansible
+ansible-playbook -i inventories/wsl/hosts site.yml
+
+# 2. chezmoiで個人設定を適用
+chezmoi init /path/to/devenv-bootstrap/dotfiles
+chezmoi apply -v
 ```
 
 ### 実行方法
@@ -743,8 +770,76 @@ ansible-playbook -i inventories/wsl/hosts site.yml --syntax-check
 ansible-inventory -i inventories/wsl/hosts --list
 ```
 
+## 🔄 Ansibleとchezmoiの使い分け
+
+### 管理方法の選択
+
+`group_vars/all.yml` で設定ファイルの管理方法を選択できます：
+
+```yaml
+# chezmoi で dotfiles を管理する場合は true に設定
+# true の場合、Ansible は設定ファイル（.bashrc, .zshrc, .gitconfig等）を配置しません
+use_chezmoi_for_dotfiles: false  # デフォルト: Ansibleで管理
+```
+
+### 推奨構成: ハイブリッドアプローチ
+
+**Ansible**: システム基盤とパッケージのインストール  
+**chezmoi**: 個人設定ファイル（dotfiles）の管理
+
+#### Ansibleが管理するもの
+
+✅ **パッケージインストール**
+- Linuxbrew本体
+- CLIツール（bat、delta、eza、gh、chezmoi等）
+- ランタイム（Node.js、uv）
+- Docker Engine
+
+✅ **システム設定**
+- sudoers設定
+- SSHサーバーのインストールと起動
+- 環境固有の設定（WSL、Azure VM、EC2等）
+
+#### chezmoiが管理するもの（推奨）
+
+✅ **個人設定ファイル**
+- シェル設定（~/.bashrc、~/.zshrc）
+- Git設定（~/.gitconfig）
+- ターミナル設定（~/.tmux.conf）
+- プロンプト設定（~/.config/starship.toml）
+- PowerLine設定（~/.config/powerline/）
+
+### ワークフロー
+
+```bash
+# 手順1: Ansibleでシステム基盤を構築
+cd ansible
+ansible-playbook -i inventories/wsl/hosts site.yml
+
+# 手順2: chezmoiで個人設定を適用
+chezmoi init /path/to/devenv-bootstrap/dotfiles
+# または GitHubリポジトリから
+chezmoi init https://github.com/your-username/dotfiles.git
+
+# 変更内容を確認
+chezmoi diff
+
+# 設定を適用
+chezmoi apply -v
+```
+
+### 利点
+
+- **明確な責任分離**: システム構築と個人設定を分離
+- **柔軟性**: 個人設定だけを別マシンに適用可能
+- **バージョン管理**: dotfilesを独立したリポジトリで管理
+- **頻繁な変更に対応**: 個人設定の変更がシステム構築に影響しない
+
+詳細は [`dotfiles/README.md`](../dotfiles/README.md) を参照してください。
+
 ## 📚 参考資料
 
 - [Ansible Documentation](https://docs.ansible.com/)
 - [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux)
 - [sudoers Manual](https://www.sudo.ws/docs/man/sudoers.man/)
+- [chezmoi Documentation](https://www.chezmoi.io/)

@@ -111,6 +111,14 @@
         - eza
         - tools
 
+    - name: chezmoi をインストール
+      ansible.builtin.include_role:
+        name: chezmoi
+      tags:
+        - chezmoi
+        - dotfiles
+        - tools
+
     - name: xh をインストール
       ansible.builtin.include_role:
         name: xh

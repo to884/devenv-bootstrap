@@ -27,9 +27,94 @@ cd dev-env-bootstrap
 
 # 必要に応じて certs ディレクトリに Zscalerルート証明書（zscaler*root*.pem/.crt）を配置
 
-# スクリプトを実行
+# 1. Ansibleでシステム基盤をセットアップ
 ./bootstrap.sh
+
+# 2. Ansibleでパッケージとツールをインストール
+cd ansible
+ansible-playbook -i inventories/wsl/hosts site.yml
+
+# 3. （オプション）chezmoiで個人設定を適用
+chezmoi init /path/to/devenv-bootstrap/dotfiles
+chezmoi apply -v
 ```
+
+## 🗂 ディレクトリ構成
+
+```
+devenv-bootstrap/
+├── bootstrap.sh          # Ansibleインストールスクリプト
+├── ansible/              # Ansible playbookとロール
+│   ├── site.yml         # メインエントリーポイント
+│   ├── playbooks/       # Playbook定義
+│   ├── roles/           # ロール（パッケージ、ツールのインストール）
+│   ├── inventories/     # 環境別インベントリ（WSL、Azure VM、EC2等）
+│   └── group_vars/      # グローバル変数
+├── dotfiles/             # chezmoi管理下の個人設定ファイル
+│   ├── dot_bashrc.tmpl  # ~/.bashrc
+│   ├── dot_zshrc.tmpl   # ~/.zshrc
+│   ├── dot_gitconfig.tmpl # ~/.gitconfig
+│   ├── dot_tmux.conf    # ~/.tmux.conf
+│   └── dot_config/      # ~/.config/
+│       ├── starship.toml
+│       └── powerline/
+└── certs/                # Zscalerルート証明書配置先
+```
+
+## 🔄 Ansibleとchezmoiの役割分担
+
+このプロジェクトは、**Ansible**と**chezmoi**を組み合わせたハイブリッドアプローチを採用しています。
+
+### Ansible: システム基盤の構築
+
+**対象**: システムレベルの設定とパッケージ管理
+
+- パッケージのインストール（Linuxbrew、bat、delta、eza、gh、chezmoi等）
+- システム設定（sudo、SSH、Docker）
+- 環境固有の設定（WSL、Azure VM、EC2等）
+
+**実行方法**:
+```bash
+cd ansible
+ansible-playbook -i inventories/wsl/hosts site.yml
+```
+
+### chezmoi: 個人設定ファイルの管理
+
+**対象**: ユーザー個別のドットファイル
+
+- シェル設定（~/.bashrc、~/.zshrc）
+- Git設定（~/.gitconfig）
+- ターミナル設定（~/.tmux.conf、~/.config/starship.toml）
+- PowerLine設定（~/.config/powerline/）
+
+**実行方法**:
+```bash
+# 初回セットアップ
+chezmoi init /path/to/devenv-bootstrap/dotfiles
+# または GitHubから
+chezmoi init https://github.com/your-username/dotfiles.git
+
+# 変更を確認
+chezmoi diff
+
+# 適用
+chezmoi apply -v
+```
+
+### 切り替え方法
+
+`ansible/group_vars/all.yml` で管理方法を切り替え可能：
+
+```yaml
+# chezmoi で dotfiles を管理する場合は true に設定
+# true の場合、Ansible は設定ファイルを配置しません
+use_chezmoi_for_dotfiles: false  # デフォルト: Ansibleで管理
+```
+
+**推奨設定**: `use_chezmoi_for_dotfiles: true`
+
+これにより、Ansibleはパッケージインストールのみを行い、設定ファイルはchezmoiで管理されます。
 
 ## 📖 使用方法
 

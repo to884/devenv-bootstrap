@@ -1,0 +1,149 @@
+# ============================================================================
+# .gitconfig - Git グローバル設定
+# ============================================================================
+#
+# このファイルは chezmoi で管理されています
+# 編集する場合は: chezmoi edit ~/.gitconfig
+#
+# ============================================================================
+
+[user]
+    # ユーザー情報（環境に応じて設定してください）
+{{- if .name }}
+    name = {{ .name }}
+{{- else }}
+    # name = Your Name
+{{- end }}
+{{- if .email }}
+    email = {{ .email }}
+{{- else }}
+    # email = your.email@example.com
+{{- end }}
+
+[core]
+    # git-delta をページャーとして使用
+    pager = delta
+    editor = vim
+    # 自動改行変換を無効化
+    autocrlf = input
+    # ファイルモードの変更を無視しない
+    filemode = true
+
+[init]
+    # デフォルトブランチ名
+    defaultBranch = main
+
+[interactive]
+    # delta を interactive diff filter として使用
+    diffFilter = delta --color-only
+
+[delta]
+    # ナビゲーション機能を有効化
+    navigate = true
+    # 行番号を表示
+    line-numbers = true
+    # サイドバイサイド表示
+    side-by-side = false
+
+[merge]
+    # マージコンフリクトスタイル
+    conflictStyle = zdiff3
+
+[diff]
+    # 移動したコードの色分けを有効化
+    colorMoved = default
+    # アルゴリズムの改善
+    algorithm = histogram
+
+[pull]
+    # プルの際はリベースを優先
+    rebase = false
+
+[push]
+    # デフォルトのプッシュ動作
+    default = simple
+    # タグも一緒にプッシュ
+    followTags = true
+
+[fetch]
+    # fetch時に削除されたリモートブランチをローカルからも削除
+    prune = true
+
+[color]
+    # カラー表示を有効化
+    ui = auto
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = green
+    changed = yellow
+    untracked = red
+
+[alias]
+    # よく使うコマンドのエイリアス
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    cm = commit -m
+    ca = commit --amend
+    df = diff
+    dc = diff --cached
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    ls = log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate
+    ll = log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat
+    
+    # ブランチ関連
+    branches = branch -a
+    remotes = remote -v
+    
+    # ステージング
+    unstage = reset HEAD --
+    
+    # 直前のコミットを修正
+    undo = reset --soft HEAD^
+    
+    # 作業ツリーをクリーン
+    discard = checkout --
+    
+    # 簡潔なステータス表示
+    ss = status -s
+
+[help]
+    # タイポした場合の自動修正
+    autocorrect = 1
+
+[credential]
+    # 認証情報のキャッシュ時間（秒）
+    helper = cache --timeout=3600
+
+# ============================================================================
+# GitHub CLI 固有設定
+# ============================================================================
+
+[github]
+{{- if .github_user }}
+    user = {{ .github_user }}
+{{- end }}
+
+# ============================================================================
+# その他の設定
+# ============================================================================
+
+[rerere]
+    # リベース時の競合解決を記憶
+    enabled = true
+
+[log]
+    # 日付フォーマット
+    date = iso

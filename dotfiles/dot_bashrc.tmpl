@@ -1,0 +1,119 @@
+# ============================================================================
+# .bashrc - Bash シェル設定ファイル
+# ============================================================================
+#
+# このファイルは chezmoi で管理されています
+# 編集する場合は: chezmoi edit ~/.bashrc
+#
+# ============================================================================
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# ============================================================================
+# Linuxbrew
+# ============================================================================
+
+# Linuxbrew を PATH に追加
+if [[ -d /home/linuxbrew/.linuxbrew ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# ============================================================================
+# starship プロンプト
+# ============================================================================
+
+# starship プロンプトを初期化
+if command -v starship &> /dev/null; then
+    eval "$(starship init bash)"
+fi
+
+# ============================================================================
+# History 設定
+# ============================================================================
+
+# コマンド履歴の保存数
+HISTSIZE=10000
+HISTFILESIZE=20000
+
+# 重複したコマンドを履歴に保存しない
+HISTCONTROL=ignoreboth:erasedups
+
+# 履歴にタイムスタンプを追加
+HISTTIMEFORMAT="%Y-%m-%d %T "
+
+# シェル終了時に履歴を追記（上書きしない）
+shopt -s histappend
+
+# ============================================================================
+# エイリアス
+# ============================================================================
+
+# ls の色付けとエイリアス
+if command -v eza &> /dev/null; then
+    # ezaがインストールされている場合
+    alias ls='eza --icons'
+    alias ll='eza -alh --icons'
+    alias la='eza -a --icons'
+    alias lt='eza --tree --icons'
+else
+    # 標準のlsを使用
+    alias ls='ls --color=auto'
+    alias ll='ls -alh'
+    alias la='ls -A'
+fi
+
+# cat の代わりに bat を使用
+if command -v bat &> /dev/null; then
+    alias cat='bat'
+fi
+
+# grep の色付け
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# 安全なファイル操作
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# ディレクトリ移動
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# ============================================================================
+# 環境変数
+# ============================================================================
+
+# エディタ設定
+export EDITOR=vim
+export VISUAL=vim
+
+# ============================================================================
+# その他の設定
+# ============================================================================
+
+# カラー対応のディレクトリリスト
+export LS_COLORS='di=34:ln=35:so=32:pi=33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43'
+
+# lessのオプション
+export LESS='-R -F -X'
+
+# PowerLine for tmux（pip3 --user でインストールされている場合）
+if [[ -f ~/.local/lib/python*/site-packages/powerline/bindings/bash/powerline.sh ]]; then
+    powerline_script=$(find ~/.local/lib/python*/site-packages/powerline/bindings/bash/powerline.sh 2>/dev/null | head -n1)
+    if [[ -n "$powerline_script" ]]; then
+        source "$powerline_script"
+    fi
+fi
+
+# ============================================================================
+# ユーザーカスタマイズ領域
+# ============================================================================
+# この下に個人的な設定を追加してください
+

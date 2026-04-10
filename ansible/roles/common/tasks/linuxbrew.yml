@@ -86,6 +86,7 @@
     create: yes
     state: present
   become: no
+  when: not use_chezmoi_for_dotfiles
 
 - name: Linuxbrew を PATH に追加 (.zshrc - zsh がインストールされている場合)
   ansible.builtin.lineinfile:
@@ -94,7 +95,9 @@
     create: yes
     state: present
   become: no
-  when: ansible_facts['ansible_env'].SHELL is defined and 'zsh' in ansible_facts['ansible_env'].SHELL
+  when:
+    - not use_chezmoi_for_dotfiles
+    - ansible_facts['ansible_env'].SHELL is defined and 'zsh' in ansible_facts['ansible_env'].SHELL
   ignore_errors: yes
 
 - name: Linuxbrew のインストール状態を確認
