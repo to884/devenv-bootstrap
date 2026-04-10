@@ -35,9 +35,69 @@
     url: https://get.docker.com
     dest: /tmp/get-docker.sh
     mode: '0755'
+
   when:
     - environment_type | default('') != 'docker'
     - docker_check.rc != 0
+
+# ============================================================================
+# Zscaler証明書をDocker信頼ストアに追加（証明書が存在する場合のみ・パターン一致）
+# ============================================================================
+- name: Zscaler証明書候補ファイルを検索（大文字小文字無視・パターン一致）
+  ansible.builtin.find:
+    paths: "{{ playbook_dir | dirname | dirname }}/certs"
+    patterns: "*zscaler*root*.pem"
+    use_regex: false
+    recurse: false
+    file_type: file
+    case_sensitive: false
+  register: zscaler_cert_files
+
+- name: Zscaler証明書をDocker信頼ストアにコピー
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "/etc/docker/certs.d/zscaler-ca.pem"
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  loop: "{{ zscaler_cert_files.files }}"
+  when:
+    - zscaler_cert_files.matched > 0
+    - environment_type | default('') != 'docker'
+
+- name: Zscaler証明書をDockerデーモンのCAディレクトリにコピー
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "/etc/docker/ca-certificates.d/zscaler-ca.pem"
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  loop: "{{ zscaler_cert_files.files }}"
+  when:
+    - zscaler_cert_files.matched > 0
+    - environment_type | default('') != 'docker'
+
+- name: Dockerデーモンの証明書ストアを再読込
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  become: yes
+  when:
+    - zscaler_cert_files.matched > 0
+    - environment_type | default('') != 'docker'
+    - ansible_service_mgr == 'systemd'
+
+- name: Zscaler証明書追加完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      Zscaler証明書をDocker信頼ストアに追加しました
+      ================================================
+  when:
+    - zscaler_cert_files.matched > 0
+    - environment_type | default('') != 'docker'
 
 - name: Docker をインストール
   ansible.builtin.shell: /tmp/get-docker.sh

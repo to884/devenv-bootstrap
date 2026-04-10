@@ -22,6 +22,10 @@ http_proxy: "{{ lookup('env', 'http_proxy') | default('') }}"
 https_proxy: "{{ lookup('env', 'https_proxy') | default('') }}"
 no_proxy: "{{ lookup('env', 'no_proxy') | default('') }}"
 
+# プロキシ有効判定フラグ（http_proxy または https_proxy が空でなければ true）
+proxy_enabled: >-
+	{{ (http_proxy | length > 0) or (https_proxy | length > 0) }}
+
 # SSH 設定
 ssh_port: 22
 ssh_permit_root_login: "no"
@@ -31,3 +35,8 @@ ssh_password_authentication: "no"
 sudo_nopasswd: yes
 keep_proxy_env: yes
 keep_editor_env: yes
+
+# dotfiles 管理方法
+# chezmoi で dotfiles を管理する場合は true に設定
+# true の場合、Ansible は設定ファイル（.bashrc, .zshrc, .gitconfig等）を配置しません
+use_chezmoi_for_dotfiles: false
