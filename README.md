@@ -15,7 +15,7 @@
 - **Dry-runモード**: 実際の変更前にプレビュー可能
 - **詳細ログ**: デバッグモードで詳細な実行ログを出力
 - **べき等性**: 繰り返し実行しても安全
-- **Zscalerルート証明書の自動インポート**: certs ディレクトリ内の zscaler*root*.pem/.crt を自動検出し、各ディストリビューションの証明書ストアへ反映
+- **Zscalerルート証明書の自動インポート**: $HOME/.certs/ZscalerRootCA.cer が存在する場合、各ディストリビューションの証明書ストアへ自動反映
 - **openssl s_clientによる接続テスト**: 証明書インポート後、自動で接続テストを実施し、失敗時は即エラー終了
 
 ## 🚀 クイックスタート
@@ -25,7 +25,9 @@
 git clone <repository-url>
 cd dev-env-bootstrap
 
-# 必要に応じて certs ディレクトリに Zscalerルート証明書（zscaler*root*.pem/.crt）を配置
+# 必要に応じて Zscalerルート証明書を配置
+mkdir -p ~/.certs
+cp /path/to/ZscalerRootCA.cer ~/.certs/
 
 # 1. Ansibleでシステム基盤をセットアップ
 ./bootstrap.sh
@@ -50,15 +52,16 @@ devenv-bootstrap/
 │   ├── roles/           # ロール（パッケージ、ツールのインストール）
 │   ├── inventories/     # 環境別インベントリ（WSL、Azure VM、EC2等）
 │   └── group_vars/      # グローバル変数
-├── dotfiles/             # chezmoi管理下の個人設定ファイル
-│   ├── dot_bashrc.tmpl  # ~/.bashrc
-│   ├── dot_zshrc.tmpl   # ~/.zshrc
-│   ├── dot_gitconfig.tmpl # ~/.gitconfig
-│   ├── dot_tmux.conf    # ~/.tmux.conf
-│   └── dot_config/      # ~/.config/
-│       ├── starship.toml
-│       └── powerline/
-└── certs/                # Zscalerルート証明書配置先
+└── dotfiles/             # chezmoi管理下の個人設定ファイル
+    ├── dot_bashrc.tmpl  # ~/.bashrc
+    ├── dot_zshrc.tmpl   # ~/.zshrc
+    ├── dot_gitconfig.tmpl # ~/.gitconfig
+    ├── dot_tmux.conf    # ~/.tmux.conf
+    └── dot_config/      # ~/.config/
+        ├── starship.toml
+        └── powerline/
+
+# Zscalerルート証明書は ~/.certs/ZscalerRootCA.cer に配置
 ```
 
 ## 🔄 Ansibleとchezmoiの役割分担

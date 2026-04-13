@@ -40,3 +40,9 @@ keep_editor_env: yes
 # chezmoi で dotfiles を管理する場合は true に設定
 # true の場合、Ansible は設定ファイル（.bashrc, .zshrc, .gitconfig等）を配置しません
 use_chezmoi_for_dotfiles: false
+
+# Zscaler 証明書設定
+# ホームディレクトリの .certs ディレクトリに配置された証明書を自動検出
+zscaler_cert_path: "{{ ansible_env.HOME }}/.certs/ZscalerRootCA.cer"
+# 証明書が存在する場合に true に設定される（実行時に自動判定）
+zscaler_enabled: false

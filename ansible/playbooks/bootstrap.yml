@@ -38,6 +38,32 @@
           ディストリビューション: {{ ansible_distribution }} {{ ansible_distribution_version }}
           ================================================
 
+    - name: Zscalerルート証明書の存在確認
+      ansible.builtin.stat:
+        path: "{{ zscaler_cert_path }}"
+      register: zscaler_cert_stat
+      become: no
+      tags:
+        - zscaler
+        - certificates
+
+    - name: Zscaler有効フラグを設定
+      ansible.builtin.set_fact:
+        zscaler_enabled: "{{ zscaler_cert_stat.stat.exists | bool }}"
+      tags:
+        - zscaler
+        - certificates
+
+    - name: Zscaler証明書の状態を表示
+      ansible.builtin.debug:
+        msg: |
+          Zscaler証明書: {{ 'あり' if zscaler_enabled else 'なし' }}
+          証明書パス: {{ zscaler_cert_path }}
+          ※ 証明書のインストールはbootstrap.shで既に実施済みです
+      tags:
+        - zscaler
+        - certificates
+
     - name: sudo 設定を適用
       ansible.builtin.include_role:
         name: sudo

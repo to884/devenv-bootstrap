@@ -11,73 +11,78 @@
    - `EDITOR` 環境変数の保持
    - `sudo` グループにパスワードなしsudo権限を付与
 
-2. **共通パッケージインストール**
+2. **Zscalerルート証明書の確認** (オプション)
+   - `$HOME/.certs/ZscalerRootCA.cer` の存在をチェックし、フラグを設定
+   - **注**: 証明書のインストールは `bootstrap.sh` で既に実施済み
+   - 証明書が存在しない場合は自動スキップ
+
+3. **共通パッケージインストール**
    - 基本的な開発ツール (git, curl, wget, vim, htop)
    - Linuxbrew本体のインストール
    - シェル設定ファイル (`.bashrc`, `.zshrc`) への自動追加
 
-3. **topgrade インストール**
+4. **topgrade インストール**
    - パッケージ一括更新ツール topgrade (Linuxbrew経由)
    - Docker環境では自動スキップ
 
-4. **uv インストール**
+5. **uv インストール**
    - 高速Pythonパッケージインストーラー uv および uvx (Linuxbrew経由)
    - Rustベースの次世代Pythonツール
 
-5. **Node.js インストール**
+6. **Node.js インストール**
    - Node.js、npm、npx (Linuxbrew経由)
    - JavaScriptランタイムとパッケージマネージャー
 
-6. **starship インストール**
+7. **starship インストール**
    - 高速でカスタマイズ可能なシェルプロンプト (Linuxbrew経由)
    - Rustベースのクロスシェル対応プロンプト
 
-7. **bat インストール**
+8. **bat インストール**
    - 構文ハイライト機能付きcatの改良版 (Linuxbrew経由)
    - Git統合、行番号表示、ページング機能
 
-8. **git-delta インストール**
+9. **git-delta インストール**
    - Git差分の構文ハイライトツール (Linuxbrew経由)
    - より読みやすいgit diff表示
 
-9. **GitHub CLI (gh) インストール**
+10. **GitHub CLI (gh) インストール**
    - GitHubの公式コマンドラインツール (Linuxbrew経由)
    - リポジトリ操作、issue管理、PR作成などをCLIから実行
 
-10. **GitHub Copilot CLI インストール**
+11. **GitHub Copilot CLI インストール**
    - AI搭載のコマンドライン支援ツール (Linuxbrew経由)
    - シェルコマンド、Git操作の提案、コマンドの説明
 
-11. **Databricks CLI インストール**
+12. **Databricks CLI インストール**
    - Databricks ワークスペース管理ツール (Linuxbrew経由)
    - クラスター、ジョブ、ワークスペースの管理をCLIから実行
 
-12. **eza インストール**
+13. **eza インストール**
    - lsコマンドの現代的な代替ツール (Linuxbrew経由)
    - アイコン表示、Git統合、ツリー表示
 
-13. **chezmoi インストール**
+14. **chezmoi インストール**
    - ドットファイル管理ツール chezmoi (Linuxbrew経由)
    - dotfilesの初期化・適用が簡単
 
-14. **xh インストール**
+15. **xh インストール**
    - HTTPクライアントツール (Linuxbrew経由)
    - curlやhttpieの代替、Rust製で高速
 
-15. **tmux インストール**
+16. **tmux インストール**
    - ターミナルマルチプレクサ (Linuxbrew経由)
    - 複数のシェルセッションを管理、Powerline統合
 
-16. **Docker インストール**
+17. **Docker インストール**
    - Docker Engine の公式スクリプト経由インストール
    - ユーザーを docker グループに追加
    - Docker環境では自動スキップ
 
-17. **SSH設定**
+18. **SSH設定**
    - OpenSSH serverのインストールと設定
    - systemdサービスの有効化
 
-18. **環境固有の設定**
+19. **環境固有の設定**
    - WSL: /etc/wsl.conf の設定、systemd有効化
    - Azure VM: Azure CLI のインストール
    - EC2: AWS CLI v2 のインストール
