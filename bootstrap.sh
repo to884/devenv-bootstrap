@@ -58,6 +58,9 @@ set -Eeuo pipefail
 # ============================================================================
 # グローバル変数とデフォルト値
 
+# スクリプトの場所を取得
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+
 # 証明書ディレクトリ
 CERTS_DIR="${SCRIPT_DIR}/certs"
 
@@ -176,7 +179,6 @@ update_zscaler_root_certificates() {
 # ============================================================================
 
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly TIMESTAMP="$(date +'%Y-%m-%d %H:%M:%S')"
 
 # 設定
