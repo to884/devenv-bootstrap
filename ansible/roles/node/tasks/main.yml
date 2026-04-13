@@ -37,6 +37,49 @@
   environment:
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
 
+# ============================================================================
+# Zscaler 証明書設定
+# ============================================================================
+
+- name: Zscaler 証明書ファイルの存在確認
+  ansible.builtin.stat:
+    path: "{{ zscaler_ca_bundle_path | default('') }}"
+  register: zscaler_cert_file
+  when: zscaler_ca_bundle_path is defined and zscaler_ca_bundle_path != ''
+
+- name: npm の現在の cafile 設定を確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/npm config get cafile
+  register: npm_cafile_current
+  changed_when: false
+  failed_when: false
+  when: 
+    - zscaler_ca_bundle_path is defined
+    - zscaler_cert_file.stat.exists | default(false)
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: npm に Zscaler 証明書を設定
+  ansible.builtin.command: >
+    /home/linuxbrew/.linuxbrew/bin/npm config set cafile {{ zscaler_ca_bundle_path }}
+  when:
+    - zscaler_ca_bundle_path is defined
+    - zscaler_cert_file.stat.exists | default(false)
+    - npm_cafile_current is defined
+    - npm_cafile_current.stdout is defined
+    - npm_cafile_current.stdout != zscaler_ca_bundle_path
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+
+- name: npm の Zscaler 証明書設定完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      npm に Zscaler 証明書を設定しました: {{ zscaler_ca_bundle_path }}
+  when:
+    - zscaler_ca_bundle_path is defined
+    - zscaler_cert_file.stat.exists | default(false)
+
+# ============================================================================
+
 - name: Node.js インストール完了メッセージ
   ansible.builtin.debug:
     msg: |

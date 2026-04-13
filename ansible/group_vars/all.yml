@@ -44,5 +44,7 @@ use_chezmoi_for_dotfiles: false
 # Zscaler 証明書設定
 # ホームディレクトリの .certs ディレクトリに配置された証明書を自動検出
 zscaler_cert_path: "{{ ansible_env.HOME }}/.certs/ZscalerRootCA.cer"
+# npm/pip用のCA証明書バンドルファイル（PEM形式）
+zscaler_ca_bundle_path: "{{ ansible_env.HOME }}/.certs/ca-bundle.pem"
 # 証明書が存在する場合に true に設定される（実行時に自動判定）
 zscaler_enabled: false
