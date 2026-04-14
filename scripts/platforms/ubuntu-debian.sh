@@ -39,6 +39,11 @@ update_certificates_platform() {
     # Zscaler証明書をシステム証明書ストアに追加・更新 (Ubuntu/Debian系)
     # 引数: $1 = 証明書ファイルパス
 
+    if [[ $# -lt 1 ]]; then
+        log_error "update_certificates_platform: 証明書ファイルパスが指定されていません"
+        return 1
+    fi
+
     local cert_file="$1"
     local dest="/usr/local/share/ca-certificates/$(basename "$cert_file")"
     local need_update=0
@@ -73,11 +78,11 @@ update_certificates_platform() {
         log_info "証明書ストアを更新中 (Ubuntu/Debian系)..."
         sudo update-ca-certificates
         log_success "証明書ストアを更新しました (Ubuntu/Debian系)"
-        return 1  # 更新が行われたことを示す
     else
         log_info "証明書バンドルは既に最新です"
-        return 0  # 更新不要
     fi
+    
+    return 0
 }
 
 # ============================================================================
@@ -100,6 +105,11 @@ check_package_installed_platform() {
     # 指定されたパッケージがインストール済みかチェック (Ubuntu/Debian系)
     # 引数: $1 = パッケージ名
     # 戻り値: インストール済みなら0、未インストールなら1
+
+    if [[ $# -lt 1 ]]; then
+        log_error "check_package_installed_platform: パッケージ名が指定されていません"
+        return 1
+    fi
 
     local package="$1"
 

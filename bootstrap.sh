@@ -260,9 +260,6 @@ install_via_pip() {
         log_info "仮想環境は既に存在します: $VENV_PATH"
     fi
 
-    # プラットフォーム固有のpip設定を適用
-    configure_pip
-
     # 仮想環境のpipパスを検証
     if [[ "$DRY_RUN" != "true" && ! -f "$VENV_PATH/bin/pip" ]]; then
         log_error "仮想環境のpipが見つかりません: $VENV_PATH/bin/pip"
@@ -273,11 +270,27 @@ install_via_pip() {
 
     # 仮想環境内のpipをアップグレード
     log_info "pipをアップグレード中..."
-    upgrade_pip
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install --upgrade pip"
+    else
+        "$VENV_PATH/bin/pip" install --upgrade pip || {
+            log_error "pipのアップグレードに失敗しました"
+            exit 1
+        }
+        log_success "pipのアップグレードが完了しました"
+    fi
 
     # Ansibleをインストール
     log_info "Ansibleパッケージをインストール中..."
-    install_ansible_package
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install $ANSIBLE_PACKAGE"
+    else
+        "$VENV_PATH/bin/pip" install "$ANSIBLE_PACKAGE" || {
+            log_error "Ansibleのインストールに失敗しました"
+            exit 1
+        }
+        log_success "Ansibleパッケージのインストールが完了しました"
+    fi
 
     # インストール確認
     if [[ "$DRY_RUN" != "true" ]]; then
@@ -308,8 +321,27 @@ main() {
 
     # 証明書の更新 (プラットフォーム固有)
     if [[ "$(type -t update_certificates_platform)" == "function" ]]; then
-        log_info "プラットフォーム固有の証明書更新を実行中..."
-        update_certificates_platform
+        local certs_dir="${SCRIPT_DIR}/certs"
+        local cert_files_found=0
+        
+        if [[ -d "$certs_dir" ]]; then
+            log_debug "証明書ディレクトリをスキャン中: $certs_dir"
+            
+            # .crt または .pem ファイルを検索
+            while IFS= read -r -d '' cert_file; do
+                log_info "証明書ファイルを検出: $(basename "$cert_file")"
+                update_certificates_platform "$cert_file"
+                cert_files_found=$((cert_files_found + 1))
+            done < <(find "$certs_dir" -maxdepth 1 -type f \( -name "*.crt" -o -name "*.pem" \) -print0 2>/dev/null)
+            
+            if [[ $cert_files_found -eq 0 ]]; then
+                log_debug "証明書ディレクトリに証明書ファイル (.crt, .pem) が見つかりませんでした (スキップ)"
+            else
+                log_info "証明書ファイルの処理が完了しました: $cert_files_found 個"
+            fi
+        else
+            log_debug "証明書ディレクトリが見つかりません: $certs_dir (スキップ)"
+        fi
     else
         log_debug "プラットフォーム固有の証明書更新関数が見つかりません (スキップ)"
     fi
@@ -331,6 +363,11 @@ main() {
         log_info ""
         log_info "再インストールするには、まず仮想環境を削除してください:"
         log_info "  rm -rf $VENV_PATH"
+        log_info ""
+        
+        # 実行環境を自動検出してログに出力（既存インストール時も表示）
+        log_environment_info
+        
         exit 0
     fi
 
@@ -362,6 +399,9 @@ main() {
     log_info "仮想環境をPATHに追加する場合 (オプション):"
     log_info "  ${COLOR_GREEN:-}echo 'export PATH=\"$VENV_PATH/bin:\$PATH\"' >> ~/.bashrc${COLOR_RESET:-}"
     echo ""
+
+    # 実行環境を自動検出してログに出力（最後に表示）
+    log_environment_info
 
     if [[ "$DRY_RUN" == "true" ]]; then
         log_warning "dry-runモード: 実際の変更は行われませんでした"

@@ -95,7 +95,7 @@ trap 'error_handler $LINENO' ERR
 # ============================================================================
 
 log_info() {
-    echo -e "${COLOR_BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] INFO:${COLOR_RESET} $*" >&2
+    echo -e "${COLOR_BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] INFO:   ${COLOR_RESET} $*" >&2
 }
 
 log_success() {
@@ -103,7 +103,7 @@ log_success() {
 }
 
 log_error() {
-    echo -e "${COLOR_RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${COLOR_RESET} $*" >&2
+    echo -e "${COLOR_RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:  ${COLOR_RESET} $*" >&2
 }
 
 log_warning() {
@@ -112,7 +112,7 @@ log_warning() {
 
 log_debug() {
     if [[ "$VERBOSE" == "true" ]]; then
-        echo -e "${COLOR_GRAY}[$(date +'%Y-%m-%d %H:%M:%S')] DEBUG:${COLOR_RESET} $*" >&2
+        echo -e "${COLOR_GRAY}[$(date +'%Y-%m-%d %H:%M:%S')] DEBUG:  ${COLOR_RESET} $*" >&2
     fi
 }
 
@@ -455,6 +455,312 @@ parse_arguments() {
                 ;;
         esac
     done
+}
+
+# ============================================================================
+# 実行環境検出
+# ============================================================================
+
+detect_wsl() {
+    # WSL (Windows Subsystem for Linux) 環境を検出
+    # 戻り値: WSL環境なら0、そうでなければ1
+
+    log_debug "WSL環境を検出中..."
+
+    # /proc/version に "microsoft" または "WSL" が含まれるかチェック
+    if [[ -r /proc/version ]] && grep -qiE "microsoft|wsl" /proc/version 2>/dev/null; then
+        log_debug "WSL検出: /proc/version に 'microsoft' または 'WSL' が含まれています"
+        return 0
+    fi
+
+    # 環境変数 WSL_DISTRO_NAME が存在するかチェック
+    if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+        log_debug "WSL検出: WSL_DISTRO_NAME 環境変数が設定されています: $WSL_DISTRO_NAME"
+        return 0
+    fi
+
+    # フォールバック: /proc/sys/kernel/osrelease をチェック
+    if [[ -r /proc/sys/kernel/osrelease ]] && grep -qiE "microsoft|wsl" /proc/sys/kernel/osrelease 2>/dev/null; then
+        log_debug "WSL検出: /proc/sys/kernel/osrelease に 'microsoft' が含まれています"
+        return 0
+    fi
+
+    log_debug "WSL環境ではありません"
+    return 1
+}
+
+detect_docker() {
+    # Docker コンテナ環境を検出
+    # 戻り値: Docker環境なら0、そうでなければ1
+
+    log_debug "Docker環境を検出中..."
+
+    # /.dockerenv ファイルが存在するかチェック (最も確実)
+    if [[ -f /.dockerenv ]]; then
+        log_debug "Docker検出: /.dockerenv ファイルが存在します"
+        return 0
+    fi
+
+    # /proc/1/cgroup に "docker" または "containerd" が含まれるかチェック
+    if [[ -r /proc/1/cgroup ]] && grep -qE "docker|containerd" /proc/1/cgroup 2>/dev/null; then
+        log_debug "Docker検出: /proc/1/cgroup に 'docker' または 'containerd' が含まれています"
+        return 0
+    fi
+
+    # /proc/self/cgroup もチェック (フォールバック)
+    if [[ -r /proc/self/cgroup ]] && grep -qE "docker|containerd" /proc/self/cgroup 2>/dev/null; then
+        log_debug "Docker検出: /proc/self/cgroup に 'docker' または 'containerd' が含まれています"
+        return 0
+    fi
+
+    log_debug "Docker環境ではありません"
+    return 1
+}
+
+detect_ec2() {
+    # AWS EC2 インスタンスを検出
+    # 戻り値: EC2環境なら0、そうでなければ1
+
+    log_debug "EC2環境を検出中..."
+
+    # AWS Instance Metadata Service v2 (IMDSv2) へのアクセステスト
+    # タイムアウト1秒で遅延を防止
+    if command -v curl >/dev/null 2>&1; then
+        if curl -s -m 1 -f http://169.254.169.254/latest/meta-data/ >/dev/null 2>&1; then
+            log_debug "EC2検出: AWS IMDS にアクセスできました"
+            return 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -T 1 -O /dev/null http://169.254.169.254/latest/meta-data/ 2>/dev/null; then
+            log_debug "EC2検出: AWS IMDS にアクセスできました (wget)"
+            return 0
+        fi
+    fi
+
+    # DMI情報から product_uuid の "ec2" プレフィックスを検出
+    if [[ -r /sys/class/dmi/id/product_uuid ]]; then
+        local uuid
+        uuid=$(cat /sys/class/dmi/id/product_uuid 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        if [[ "$uuid" =~ ^ec2 ]]; then
+            log_debug "EC2検出: product_uuid が 'ec2' で始まります"
+            return 0
+        fi
+    fi
+
+    # /sys/class/dmi/id/board_vendor や board_asset_tag もチェック
+    if [[ -r /sys/class/dmi/id/board_vendor ]]; then
+        local vendor
+        vendor=$(cat /sys/class/dmi/id/board_vendor 2>/dev/null)
+        if [[ "$vendor" == "Amazon EC2" ]]; then
+            log_debug "EC2検出: board_vendor が 'Amazon EC2' です"
+            return 0
+        fi
+    fi
+
+    log_debug "EC2環境ではありません"
+    return 1
+}
+
+detect_azure() {
+    # Azure Virtual Machine を検出
+    # 戻り値: Azure環境なら0、そうでなければ1
+
+    log_debug "Azure VM環境を検出中..."
+
+    # Azure Instance Metadata Service (IMDS) へのアクセステスト
+    # タイムアウト1秒で遅延を防止
+    if command -v curl >/dev/null 2>&1; then
+        if curl -s -m 1 -f -H "Metadata:true" \
+            "http://169.254.169.254/metadata/instance?api-version=2021-02-01" \
+            >/dev/null 2>&1; then
+            log_debug "Azure検出: Azure IMDS にアクセスできました"
+            return 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -T 1 --header="Metadata:true" -O /dev/null \
+            "http://169.254.169.254/metadata/instance?api-version=2021-02-01" \
+            2>/dev/null; then
+            log_debug "Azure検出: Azure IMDS にアクセスできました (wget)"
+            return 0
+        fi
+    fi
+
+    # DMI情報から "Microsoft Corporation" を検出
+    if [[ -r /sys/class/dmi/id/sys_vendor ]]; then
+        local vendor
+        vendor=$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null)
+        if [[ "$vendor" == "Microsoft Corporation" ]]; then
+            # Microsoft Corporation はHyper-Vでも表示されるため、
+            # Azure IMDSで確認済みの場合のみAzureと判定
+            # (この時点でIMDSテストは失敗しているので、Hyper-Vの可能性)
+            log_debug "Azure検出をスキップ: Microsoft Corporation だがIMDSアクセス不可 (Hyper-Vの可能性)"
+            return 1
+        fi
+    fi
+
+    log_debug "Azure VM環境ではありません"
+    return 1
+}
+
+detect_hyperv() {
+    # Hyper-V 仮想マシンを検出
+    # 戻り値: Hyper-V環境なら0、そうでなければ1
+
+    log_debug "Hyper-V環境を検出中..."
+
+    # systemd-detect-virt コマンドを使用 (利用可能な場合)
+    if command -v systemd-detect-virt >/dev/null 2>&1; then
+        local virt_type
+        virt_type=$(systemd-detect-virt 2>/dev/null || echo "none")
+        if [[ "$virt_type" == "microsoft" ]]; then
+            log_debug "Hyper-V検出: systemd-detect-virt が 'microsoft' を返しました"
+            return 0
+        fi
+    fi
+
+    # DMI情報から "Microsoft Corporation" を検出
+    # (Azure VMとの区別: Azure IMDSにアクセスできない場合はHyper-V)
+    if [[ -r /sys/class/dmi/id/sys_vendor ]]; then
+        local vendor
+        vendor=$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null)
+        if [[ "$vendor" == "Microsoft Corporation" ]]; then
+            # Azure IMDSへのアクセスをテスト (タイムアウト1秒)
+            local is_azure=false
+            if command -v curl >/dev/null 2>&1; then
+                if curl -s -m 1 -f -H "Metadata:true" \
+                    "http://169.254.169.254/metadata/instance?api-version=2021-02-01" \
+                    >/dev/null 2>&1; then
+                    is_azure=true
+                fi
+            fi
+
+            if [[ "$is_azure" == "false" ]]; then
+                log_debug "Hyper-V検出: Microsoft Corporation でAzure IMDSアクセス不可"
+                return 0
+            else
+                log_debug "Hyper-V検出をスキップ: Azure VM と判定されました"
+                return 1
+            fi
+        fi
+    fi
+
+    log_debug "Hyper-V環境ではありません"
+    return 1
+}
+
+detect_environment() {
+    # 実行環境を総合的に検出
+    # 戻り値: 環境タイプ文字列 (wsl, docker, ec2, azure_vm, hyperv, baremetal)
+
+    log_debug "実行環境を総合検出中..."
+
+    local env_type="baremetal"  # デフォルト値
+
+    # 検出優先順位: Docker > WSL > EC2 > Azure > Hyper-V > baremetal
+    # (複数環境が重なる場合に対応)
+
+    if detect_docker; then
+        env_type="docker"
+    elif detect_wsl; then
+        env_type="wsl"
+    elif detect_ec2; then
+        env_type="ec2"
+    elif detect_azure; then
+        env_type="azure_vm"
+    elif detect_hyperv; then
+        env_type="hyperv"
+    fi
+
+    log_debug "検出された環境タイプ: $env_type"
+    echo "$env_type"
+}
+
+log_environment_info() {
+    # 実行環境情報をログに出力し、推奨インベントリファイルを表示
+
+    log_info ""
+    log_info "============================================"
+    log_info "実行環境の自動検出"
+    log_info "============================================"
+
+    local env_type
+    env_type=$(detect_environment)
+
+    case "$env_type" in
+        wsl)
+            log_success "検出された環境: WSL (Windows Subsystem for Linux)"
+            log_info "推奨インベントリ: inventories/wsl/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap-wsl.yml"
+            ;;
+        docker)
+            log_success "検出された環境: Docker コンテナ"
+            log_info "推奨インベントリ: inventories/docker/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/docker/hosts playbooks/bootstrap-docker.yml"
+            ;;
+        ec2)
+            log_success "検出された環境: AWS EC2 インスタンス"
+            log_info "推奨インベントリ: inventories/ec2/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/ec2/hosts playbooks/bootstrap-ec2.yml"
+            ;;
+        azure_vm)
+            log_success "検出された環境: Azure Virtual Machine"
+            log_info "推奨インベントリ: inventories/azure-vm/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/azure-vm/hosts playbooks/bootstrap-azure-vm.yml"
+            ;;
+        hyperv)
+            log_success "検出された環境: Hyper-V 仮想マシン"
+            log_info "推奨インベントリ: inventories/hyperv/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/hyperv/hosts playbooks/bootstrap-hyperv.yml"
+            ;;
+        baremetal)
+            log_success "検出された環境: ベアメタル / 汎用Linux環境"
+            log_info "推奨インベントリ: inventories/baremetal/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/baremetal/hosts playbooks/bootstrap-baremetal.yml"
+            ;;
+        *)
+            log_warning "検出された環境: 不明 (デフォルト: baremetal)"
+            log_info "推奨インベントリ: inventories/baremetal/hosts"
+            log_info ""
+            log_info "Ansible実行手順:"
+            log_info "  1. 仮想環境を有効化:"
+            log_info "     source $VENV_PATH/bin/activate"
+            log_info "  2. Ansibleを実行:"
+            log_info "     ansible-playbook -i inventories/baremetal/hosts site.yml"
+            ;;
+    esac
+
+    log_info "============================================"
+    log_info ""
 }
 
 # ============================================================================
