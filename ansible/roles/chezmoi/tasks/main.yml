@@ -35,7 +35,7 @@
 
 - name: dotfiles ディレクトリの存在確認
   ansible.builtin.stat:
-    path: "{{ playbook_dir }}/../dotfiles"
+    path: "{{ playbook_dir }}/../../dotfiles"
   register: dotfiles_dir
   become: no
   delegate_to: localhost
@@ -49,7 +49,7 @@
 - name: chezmoi を初期化（dotfiles ディレクトリから）
   ansible.builtin.command: >
     /home/linuxbrew/.linuxbrew/bin/chezmoi init
-    --source={{ playbook_dir }}/../dotfiles
+    --source={{ playbook_dir }}/../../dotfiles
   become: no
   environment:
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
