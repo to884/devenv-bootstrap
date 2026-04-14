@@ -21,6 +21,11 @@
       "sourceType": "github",
       "computedHash": "df46f98c86c4bf5e17cd30fa142552c33f90ef8e97b920958030831ee7193c1d"
     },
+    "chezmoi-workflows": {
+      "source": "terrylica/cc-skills",
+      "sourceType": "github",
+      "computedHash": "917a4d8ff0894c48702d37f7b351912eafb7f419b6b67c88e58f902e24535813"
+    },
     "crafting-effective-readmes": {
       "source": "softaworks/agent-toolkit",
       "sourceType": "github",
