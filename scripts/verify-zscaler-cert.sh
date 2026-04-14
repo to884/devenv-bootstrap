@@ -239,8 +239,10 @@ main() {
     log_info "Zscaler証明書の検証を開始します"
     log_debug "Verboseモード: $VERBOSE"
     
-    verify_zscaler_certificate
-    local exit_code=$?
+    # verify_zscaler_certificate の戻り値を取得
+    # set -e によるエラー伝播を防ぐため、明示的に戻り値を処理
+    local exit_code=0
+    verify_zscaler_certificate || exit_code=$?
     
     exit $exit_code
 }
