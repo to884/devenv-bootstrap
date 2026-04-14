@@ -121,6 +121,14 @@
         - bat
         - tools
 
+    - name: shellcheck をインストール
+      ansible.builtin.include_role:
+        name: shellcheck
+      tags:
+        - shellcheck
+        - tools
+        - scripting
+
     - name: git-delta をインストール
       ansible.builtin.include_role:
         name: delta

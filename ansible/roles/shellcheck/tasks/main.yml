@@ -1,0 +1,51 @@
+---
+# ============================================================================
+# shellcheck ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   shellcheck（シェルスクリプトの静的解析ツール）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - shellcheck: https://github.com/koalaman/shellcheck
+#
+
+- name: shellcheck をインストール
+  community.general.homebrew:
+    name: shellcheck
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  become: no
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+
+- name: shellcheck のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/shellcheck --version
+  register: shellcheck_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+  become: no
+
+- name: shellcheck インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      shellcheck のインストールが完了しました！
+      ================================================
+      バージョン: {{ shellcheck_version.stdout_lines[1] | default('確認失敗') }}
+      使用方法:
+      # スクリプトをチェック
+      shellcheck script.sh
+
+      # 詳細な説明を表示
+      shellcheck -x script.sh
+
+      # 複数ファイルを一括チェック
+      shellcheck *.sh
+
+      ================================================
