@@ -15,8 +15,11 @@
 - **Dry-runモード**: 実際の変更前にプレビュー可能
 - **詳細ログ**: デバッグモードで詳細な実行ログを出力
 - **べき等性**: 繰り返し実行しても安全
-- **Zscalerルート証明書の自動インポート**: $HOME/.certs/ZscalerRootCA.cer が存在する場合、各ディストリビューションの証明書ストアへ自動反映
-- **openssl s_clientによる接続テスト**: 証明書インポート後、自動で接続テストを実施し、失敗時は即エラー終了
+- **Zscaler環境対応**: 
+  - `$HOME/.certs/ZscalerRootCA.cer` を自動検出
+  - DER形式の証明書を自動的にPEM形式に変換
+  - システム証明書ストアへの自動追加
+  - pipコマンドで証明書を自動適用（SSL証明書検証エラーを回避）
 
 ## 🚀 クイックスタート
 
@@ -25,11 +28,13 @@
 git clone <repository-url>
 cd dev-env-bootstrap
 
-# 必要に応じて Zscalerルート証明書を配置
+# （Zscaler環境の場合）ルート証明書を配置
+# DER形式（.cer）またはPEM形式（.crt/.pem）どちらでも可
 mkdir -p ~/.certs
 cp /path/to/ZscalerRootCA.cer ~/.certs/
 
 # 1. Ansibleインストール用の仮想環境をセットアップ
+# Zscaler証明書が存在する場合、自動的に検出・変換・適用されます
 ./bootstrap.sh
 
 # 2. 仮想環境を有効化
@@ -49,6 +54,10 @@ chezmoi apply -v
 ```
 devenv-bootstrap/
 ├── bootstrap.sh          # Ansibleインストールスクリプト
+├── scripts/              # プラットフォーム固有の処理
+│   ├── lib/
+│   │   └── common.sh    # 共通関数（証明書変換含む）
+│   └── platforms/       # プラットフォーム別ハンドラー
 ├── ansible/              # Ansible playbookとロール
 │   ├── site.yml         # メインエントリーポイント
 │   ├── playbooks/       # Playbook定義
@@ -64,7 +73,10 @@ devenv-bootstrap/
         ├── starship.toml
         └── powerline/
 
-# Zscalerルート証明書は ~/.certs/ZscalerRootCA.cer に配置
+# Zscaler環境の場合
+~/.certs/
+└── ZscalerRootCA.cer    # DER形式またはPEM形式の証明書
+                         # 自動的にPEM形式に変換され、システム証明書ストアに追加されます
 ```
 
 ## 🔄 Ansibleとchezmoiの役割分担

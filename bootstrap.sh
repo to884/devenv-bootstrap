@@ -237,6 +237,21 @@ install_via_pip() {
 
     log_info "仮想環境にAnsibleをインストール中: $VENV_PATH"
 
+    # システム証明書バンドルを検出 (Zscaler環境対応)
+    local distro ca_bundle
+    local -a pip_cert_options=()
+    
+    distro=$(detect_linux_distro)
+    ca_bundle=$(get_system_ca_bundle "$distro")
+    
+    if [[ -n "$ca_bundle" && -f "$ca_bundle" ]]; then
+        pip_cert_options+=(--cert "$ca_bundle")
+        log_info "pip用の証明書バンドルを設定: $ca_bundle"
+        log_debug "Zscaler環境でのSSL証明書検証を有効化しました"
+    else
+        log_debug "システム証明書バンドルが見つかりません (デフォルトの証明書検証を使用)"
+    fi
+
     # インストール用の一時ディレクトリを作成
     TMPDIR=$(mktemp -d) || {
         log_error "一時ディレクトリの作成に失敗しました"
@@ -271,9 +286,13 @@ install_via_pip() {
     # 仮想環境内のpipをアップグレード
     log_info "pipをアップグレード中..."
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install --upgrade pip"
+        if [[ ${#pip_cert_options[@]} -gt 0 ]]; then
+            echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install ${pip_cert_options[*]} --upgrade pip"
+        else
+            echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install --upgrade pip"
+        fi
     else
-        "$VENV_PATH/bin/pip" install --upgrade pip || {
+        "$VENV_PATH/bin/pip" install "${pip_cert_options[@]}" --upgrade pip || {
             log_error "pipのアップグレードに失敗しました"
             exit 1
         }
@@ -283,9 +302,13 @@ install_via_pip() {
     # Ansibleをインストール
     log_info "Ansibleパッケージをインストール中..."
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install $ANSIBLE_PACKAGE"
+        if [[ ${#pip_cert_options[@]} -gt 0 ]]; then
+            echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install ${pip_cert_options[*]} $ANSIBLE_PACKAGE"
+        else
+            echo "[dry-run] 実行予定: $VENV_PATH/bin/pip install $ANSIBLE_PACKAGE"
+        fi
     else
-        "$VENV_PATH/bin/pip" install "$ANSIBLE_PACKAGE" || {
+        "$VENV_PATH/bin/pip" install "${pip_cert_options[@]}" "$ANSIBLE_PACKAGE" || {
             log_error "Ansibleのインストールに失敗しました"
             exit 1
         }
@@ -319,28 +342,25 @@ main() {
     # プラットフォームハンドラーを動的に読み込み
     load_platform_handler
 
-    # 証明書の更新 (プラットフォーム固有)
+    # Zscaler証明書の処理 ($HOME/.certs/ZscalerRootCA.cer)
     if [[ "$(type -t update_certificates_platform)" == "function" ]]; then
-        local certs_dir="${SCRIPT_DIR}/certs"
-        local cert_files_found=0
+        local zscaler_pem_cert
+        zscaler_pem_cert=$(prepare_zscaler_certificate) || {
+            log_warning "Zscaler証明書の準備中にエラーが発生しましたが、処理を続行します"
+        }
         
-        if [[ -d "$certs_dir" ]]; then
-            log_debug "証明書ディレクトリをスキャン中: $certs_dir"
-            
-            # .crt または .pem ファイルを検索
-            while IFS= read -r -d '' cert_file; do
-                log_info "証明書ファイルを検出: $(basename "$cert_file")"
-                update_certificates_platform "$cert_file"
-                cert_files_found=$((cert_files_found + 1))
-            done < <(find "$certs_dir" -maxdepth 1 -type f \( -name "*.crt" -o -name "*.pem" \) -print0 2>/dev/null)
-            
-            if [[ $cert_files_found -eq 0 ]]; then
-                log_debug "証明書ディレクトリに証明書ファイル (.crt, .pem) が見つかりませんでした (スキップ)"
+        if [[ -n "$zscaler_pem_cert" ]]; then
+            # dry-runモードでない場合、または変換済みファイルが存在する場合のみ処理
+            if [[ "$DRY_RUN" == "true" ]] || [[ -f "$zscaler_pem_cert" ]]; then
+                log_info "Zscaler証明書をシステム証明書ストアに追加中..."
+                update_certificates_platform "$zscaler_pem_cert" || {
+                    log_warning "証明書の追加に失敗しましたが、処理を続行します"
+                }
             else
-                log_info "証明書ファイルの処理が完了しました: $cert_files_found 個"
+                log_debug "変換済み証明書ファイルが見つかりません: $zscaler_pem_cert"
             fi
         else
-            log_debug "証明書ディレクトリが見つかりません: $certs_dir (スキップ)"
+            log_debug "Zscaler証明書が見つからないため、証明書の追加をスキップします"
         fi
     else
         log_debug "プラットフォーム固有の証明書更新関数が見つかりません (スキップ)"

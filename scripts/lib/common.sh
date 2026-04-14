@@ -233,6 +233,122 @@ detect_package_manager() {
 }
 
 # ============================================================================
+# 証明書管理
+# ============================================================================
+
+convert_certificate_to_pem() {
+    # 証明書をPEM形式に変換（DER形式の場合のみ変換）
+    # 引数: $1 = 入力証明書ファイルパス
+    # 戻り値: 変換後のPEM形式ファイルパス（標準出力）、エラー時は空文字列
+
+    if [[ $# -lt 1 ]]; then
+        log_error "convert_certificate_to_pem: 証明書ファイルパスが指定されていません"
+        return 1
+    fi
+
+    local input_cert="$1"
+    local output_cert=""
+
+    # 入力ファイルの存在確認
+    if [[ ! -f "$input_cert" ]]; then
+        log_error "証明書ファイルが見つかりません: $input_cert"
+        return 1
+    fi
+
+    # opensslコマンドの存在確認
+    if ! command -v openssl >/dev/null 2>&1; then
+        log_error "opensslコマンドが見つかりません。証明書変換に必要です"
+        return 1
+    fi
+
+    # 証明書形式を判定（PEMかDERか）
+    local is_pem=false
+    if head -n1 "$input_cert" 2>/dev/null | grep -q "^-----BEGIN"; then
+        is_pem=true
+        log_debug "証明書は既にPEM形式です: $input_cert"
+    else
+        log_debug "証明書はDER形式の可能性があります: $input_cert"
+    fi
+
+    # PEM形式の場合はそのまま使用、DER形式の場合は変換
+    if [[ "$is_pem" == "true" ]]; then
+        # 拡張子を.crtに変更したパスを生成
+        local basename_no_ext="${input_cert%.*}"
+        output_cert="${basename_no_ext}.crt"
+        
+        # 既に.crtまたは.pemの場合はそのまま使用
+        if [[ "$input_cert" == *.crt ]] || [[ "$input_cert" == *.pem ]]; then
+            output_cert="$input_cert"
+            log_debug "PEM形式の証明書をそのまま使用: $output_cert"
+        else
+            # .cerなど他の拡張子の場合は.crtにコピー
+            if [[ "$DRY_RUN" == "true" ]]; then
+                log_debug "[dry-run] cp \"$input_cert\" \"$output_cert\""
+            else
+                cp "$input_cert" "$output_cert" || {
+                    log_error "PEM証明書のコピーに失敗しました"
+                    return 1
+                }
+                log_success "PEM証明書を.crt形式でコピーしました: $output_cert"
+            fi
+        fi
+    else
+        # DER形式をPEM形式に変換
+        local basename_no_ext="${input_cert%.*}"
+        output_cert="${basename_no_ext}.crt"
+        
+        log_info "DER形式からPEM形式に変換中: $(basename "$input_cert") → $(basename "$output_cert")"
+        
+        if [[ "$DRY_RUN" == "true" ]]; then
+            log_debug "[dry-run] openssl x509 -inform DER -in \"$input_cert\" -out \"$output_cert\""
+        else
+            if openssl x509 -inform DER -in "$input_cert" -out "$output_cert" 2>/dev/null; then
+                log_success "DER形式からPEM形式への変換が完了しました: $output_cert"
+            else
+                log_error "証明書の変換に失敗しました: $input_cert"
+                log_error "証明書が破損しているか、サポートされていない形式の可能性があります"
+                return 1
+            fi
+        fi
+    fi
+
+    # 変換後のファイルパスを出力
+    echo "$output_cert"
+    return 0
+}
+
+prepare_zscaler_certificate() {
+    # Zscaler証明書を検出・変換・準備
+    # 戻り値: 準備完了した証明書ファイルパス（標準出力）、見つからない場合は空文字列
+
+    local zscaler_cert="${HOME}/.certs/ZscalerRootCA.cer"
+    
+    log_debug "Zscaler証明書を検索中: $zscaler_cert"
+    
+    # 証明書ファイルの存在確認
+    if [[ ! -f "$zscaler_cert" ]]; then
+        log_debug "Zscaler証明書が見つかりません: $zscaler_cert"
+        return 0  # エラーではなく、証明書が不要な環境の可能性
+    fi
+    
+    log_info "Zscaler証明書を検出しました: $zscaler_cert"
+    
+    # 証明書をPEM形式に変換（必要な場合）
+    local pem_cert
+    pem_cert=$(convert_certificate_to_pem "$zscaler_cert") || {
+        log_error "Zscaler証明書の変換に失敗しました"
+        return 1
+    }
+    
+    if [[ -n "$pem_cert" ]]; then
+        log_success "Zscaler証明書の準備が完了しました: $pem_cert"
+        echo "$pem_cert"
+    fi
+    
+    return 0
+}
+
+# ============================================================================
 # 証明書バンドル取得
 # ============================================================================
 
