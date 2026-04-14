@@ -695,7 +695,7 @@ log_environment_info() {
             log_info "  1. 仮想環境を有効化:"
             log_info "     source $VENV_PATH/bin/activate"
             log_info "  2. Ansibleを実行:"
-            log_info "     ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap-wsl.yml"
+            log_info "     cd ansible; ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap-wsl.yml"
             ;;
         docker)
             log_success "検出された環境: Docker コンテナ"
@@ -705,7 +705,7 @@ log_environment_info() {
             log_info "  1. 仮想環境を有効化:"
             log_info "     source $VENV_PATH/bin/activate"
             log_info "  2. Ansibleを実行:"
-            log_info "     ansible-playbook -i inventories/docker/hosts playbooks/bootstrap-docker.yml"
+            log_info "     cd ansible; ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap-wsl.yml"
             ;;
         ec2)
             log_success "検出された環境: AWS EC2 インスタンス"
@@ -715,7 +715,7 @@ log_environment_info() {
             log_info "  1. 仮想環境を有効化:"
             log_info "     source $VENV_PATH/bin/activate"
             log_info "  2. Ansibleを実行:"
-            log_info "     ansible-playbook -i inventories/ec2/hosts playbooks/bootstrap-ec2.yml"
+            log_info "     cd ansible; ansible-playbook -i inventories/ec2/hosts playbooks/bootstrap-ec2.yml"
             ;;
         azure_vm)
             log_success "検出された環境: Azure Virtual Machine"
@@ -725,7 +725,7 @@ log_environment_info() {
             log_info "  1. 仮想環境を有効化:"
             log_info "     source $VENV_PATH/bin/activate"
             log_info "  2. Ansibleを実行:"
-            log_info "     ansible-playbook -i inventories/azure-vm/hosts playbooks/bootstrap-azure-vm.yml"
+            log_info "     cd ansible; ansible-playbook -i inventories/azure-vm/hosts playbooks/bootstrap-azure-vm.yml"
             ;;
         hyperv)
             log_success "検出された環境: Hyper-V 仮想マシン"
@@ -735,7 +735,7 @@ log_environment_info() {
             log_info "  1. 仮想環境を有効化:"
             log_info "     source $VENV_PATH/bin/activate"
             log_info "  2. Ansibleを実行:"
-            log_info "     ansible-playbook -i inventories/hyperv/hosts playbooks/bootstrap-hyperv.yml"
+            log_info "     cd ansible; ansible-playbook -i inventories/hyperv/hosts playbooks/bootstrap-hyperv.yml"
             ;;
         baremetal)
             log_success "検出された環境: ベアメタル / 汎用Linux環境"
@@ -745,7 +745,7 @@ log_environment_info() {
             log_info "  1. 仮想環境を有効化:"
             log_info "     source $VENV_PATH/bin/activate"
             log_info "  2. Ansibleを実行:"
-            log_info "     ansible-playbook -i inventories/baremetal/hosts playbooks/bootstrap-baremetal.yml"
+            log_info "     cd ansible; ansible-playbook -i inventories/baremetal/hosts playbooks/bootstrap-baremetal.yml"
             ;;
         *)
             log_warning "検出された環境: 不明 (デフォルト: baremetal)"

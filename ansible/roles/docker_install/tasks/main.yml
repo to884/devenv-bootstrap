@@ -103,6 +103,7 @@
     - zscaler_cert_format_check.rc != 0
   become: no
   changed_when: true
+  check_mode: no
 
 - name: Zscaler証明書をコピー（既にPEM形式の場合）
   ansible.builtin.copy:
@@ -114,6 +115,7 @@
     - environment_type | default('') != 'docker'
     - zscaler_cert_format_check.rc == 0
   become: no
+  check_mode: no
 
 - name: /etc/docker/certs.d ディレクトリを作成
   ansible.builtin.file:
