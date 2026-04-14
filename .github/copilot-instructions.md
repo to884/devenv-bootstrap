@@ -261,10 +261,10 @@ chore(ci): ShellCheckワークフローを追加
 
 ### Python仮想環境の管理
 
-デフォルトパス: `$HOME/.ansible-venv`
+デフォルトパス: `${SCRIPT_DIR}/.ansible-venv` (リポジトリ直下)
 
 ```bash
-VENV_PATH="${VENV_PATH:-${HOME}/.ansible-venv}"
+VENV_PATH="${VENV_PATH:-${SCRIPT_DIR}/.ansible-venv}"
 
 # べき等性: 既存チェック後に作成
 if [[ ! -d "$VENV_PATH" ]]; then

@@ -69,7 +69,7 @@ readonly COMMON_LIB="${SCRIPTS_DIR}/lib/common.sh"
 # 設定のデフォルト値
 DRY_RUN="${DRY_RUN:-false}"
 VERBOSE="${VERBOSE:-false}"
-VENV_PATH="${VENV_PATH:-${HOME}/.ansible-venv}"
+VENV_PATH="${VENV_PATH:-${SCRIPT_DIR}/.ansible-venv}"
 ANSIBLE_PACKAGE="ansible"
 
 # 一時ディレクトリ (終了時にクリーンアップ)
@@ -165,7 +165,7 @@ usage() {
   -d, --dry-run         実際の変更を行わず、実行内容を表示
   -v, --verbose         詳細/デバッグログを有効化
   -p, --venv-path PATH  仮想環境のカスタムパスを指定
-                        (デフォルト: \$HOME/.ansible-venv)
+                        (デフォルト: リポジトリ直下の .ansible-venv)
   -h, --help            このヘルプメッセージを表示
 
 使用例:
