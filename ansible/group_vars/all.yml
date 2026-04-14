@@ -45,7 +45,7 @@ chezmoi_auto_apply: true
 # ホームディレクトリの .certs ディレクトリに配置された証明書を自動検出
 # 注: zscaler_cert_path と zscaler_ca_bundle_path は playbook 内で動的に設定されます
 # （facts 収集後に ansible_facts.env.HOME を使用）
-# zscaler_cert_path: "{{ lookup('env', 'HOME') | default('/home/ubuntu') }}/.certs/ZscalerRootCA.cer"
+# zscaler_cert_path: "{{ lookup('env', 'HOME') | default('/home/ubuntu') }}/.certs/ZscalerRootCA.crt"
 # zscaler_ca_bundle_path: "{{ lookup('env', 'HOME') | default('/home/ubuntu') }}/.certs/ca-bundle.pem"
 # 証明書が存在する場合に true に設定される（実行時に自動判定）
 zscaler_enabled: false

@@ -12,7 +12,7 @@
    - `sudo` グループにパスワードなしsudo権限を付与
 
 2. **Zscalerルート証明書の確認** (オプション)
-   - `$HOME/.certs/ZscalerRootCA.cer` の存在をチェックし、フラグを設定
+   - `$HOME/.certs/ZscalerRootCA.crt` の存在をチェックし、フラグを設定
    - **注**: 証明書のインストールは `bootstrap.sh` で既に実施済み
    - 証明書が存在しない場合は自動スキップ
 

@@ -353,7 +353,7 @@ prepare_zscaler_certificate() {
     # Zscaler証明書を検出・変換・準備
     # 戻り値: 準備完了した証明書ファイルパス（標準出力）、見つからない場合は空文字列
 
-    local zscaler_cert="${HOME}/.certs/ZscalerRootCA.cer"
+    local zscaler_cert="${HOME}/.certs/ZscalerRootCA.crt"
     
     log_debug "Zscaler証明書を検索中: $zscaler_cert"
     

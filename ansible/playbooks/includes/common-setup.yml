@@ -22,7 +22,7 @@
     # become: no で実行ユーザーのホームディレクトリを取得
     - name: Zscaler証明書パスを設定
       ansible.builtin.set_fact:
-        zscaler_cert_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.cer"
+        zscaler_cert_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
         zscaler_ca_bundle_path: "{{ lookup('env', 'HOME') }}/.certs/ca-bundle.pem"
       become: no
       when: zscaler_cert_path is not defined or zscaler_ca_bundle_path is not defined

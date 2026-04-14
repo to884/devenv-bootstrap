@@ -126,7 +126,7 @@ verify_zscaler_certificate() {
     log_debug "証明書ストアパス: $cert_store"
     
     # ソース証明書ファイルの確認
-    local source_cert="${HOME}/.certs/ZscalerRootCA.cer"
+    local source_cert="${HOME}/.certs/ZscalerRootCA.crt"
     local source_pem="${HOME}/.certs/ZscalerRootCA.pem"
     
     local found_source=false
@@ -212,7 +212,7 @@ verify_zscaler_certificate() {
         log_error "========================================"
         log_error ""
         log_error "対処方法:"
-        log_error "1. 証明書ファイルを配置: ~/.certs/ZscalerRootCA.cer"
+        log_error "1. 証明書ファイルを配置: ~/.certs/ZscalerRootCA.crt"
         log_error "2. bootstrap.sh を実行して証明書を登録"
         log_error "3. このスクリプトで再確認"
         return 1

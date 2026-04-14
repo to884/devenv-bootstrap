@@ -16,7 +16,7 @@
 - **詳細ログ**: デバッグモードで詳細な実行ログを出力
 - **べき等性**: 繰り返し実行しても安全
 - **Zscaler環境対応**: 
-  - `$HOME/.certs/ZscalerRootCA.cer` を自動検出
+  - `$HOME/.certs/ZscalerRootCA.crt` を自動検出
   - DER形式の証明書を自動的にPEM形式に変換
   - システム証明書ストアへの自動追加
   - pipコマンドで証明書を自動適用（SSL証明書検証エラーを回避）
@@ -31,7 +31,7 @@ cd dev-env-bootstrap
 # （Zscaler環境の場合）ルート証明書を配置
 # DER形式（.cer）またはPEM形式（.crt/.pem）どちらでも可
 mkdir -p ~/.certs
-cp /path/to/ZscalerRootCA.cer ~/.certs/
+cp /path/to/ZscalerRootCA.crt ~/.certs/
 
 # 1. Ansibleインストール用の仮想環境をセットアップ
 # Zscaler証明書が存在する場合:
@@ -78,7 +78,7 @@ devenv-bootstrap/
 
 # Zscaler環境の場合
 ~/.certs/
-└── ZscalerRootCA.cer    # DER形式またはPEM形式の証明書
+└── ZscalerRootCA.crt    # DER形式またはPEM形式の証明書
                          # 自動的にPEM形式に変換され、システム証明書ストアに追加されます
 ```
 
@@ -153,14 +153,14 @@ mkdir -p ~/.certs
 # 1. テキスト情報 + PEMブロック（openssl x509 -text 出力など）
 # 2. 純粋なPEM形式（-----BEGIN CERTIFICATE-----から始まる）
 # 3. DERバイナリ形式
-cp /path/to/ZscalerRootCA.cer ~/.certs/
+cp /path/to/ZscalerRootCA.crt ~/.certs/
 ```
 
 #### 自動処理の内容
 
 `bootstrap.sh` を実行すると、以下の処理が自動的に行われます：
 
-1. **証明書の検出**: `~/.certs/ZscalerRootCA.cer` の存在を確認
+1. **証明書の検出**: `~/.certs/ZscalerRootCA.crt` の存在を確認
 2. **形式の判定と変換**:
    - テキスト情報 + PEM: PEMブロックのみを抽出
    - 純粋なPEM: そのまま使用（べき等性）
@@ -347,16 +347,16 @@ ansible-playbook -i inventories/docker/hosts playbooks/containers.yml
 
 # 確認方法:
 # 1. ファイルの内容を確認
-cat ~/.certs/ZscalerRootCA.cer
+cat ~/.certs/ZscalerRootCA.crt
 
 # 2. PEMブロックが含まれているか確認
-grep "BEGIN CERTIFICATE" ~/.certs/ZscalerRootCA.cer
+grep "BEGIN CERTIFICATE" ~/.certs/ZscalerRootCA.crt
 
 # 3. openssl で確認
-openssl x509 -in ~/.certs/ZscalerRootCA.cer -text -noout
+openssl x509 -in ~/.certs/ZscalerRootCA.crt -text -noout
 
 # DER形式の場合:
-openssl x509 -inform DER -in ~/.certs/ZscalerRootCA.cer -text -noout
+openssl x509 -inform DER -in ~/.certs/ZscalerRootCA.crt -text -noout
 
 # 解決方法:
 # - 正しい証明書ファイルを再取得
@@ -389,7 +389,7 @@ grep "Zscaler" /etc/ssl/certs/ca-certificates.crt
 # 解決手順:
 # 1. 証明書を配置
 mkdir -p ~/.certs
-cp /path/to/ZscalerRootCA.cer ~/.certs/
+cp /path/to/ZscalerRootCA.crt ~/.certs/
 
 # 2. bootstrap.sh を再実行
 ./bootstrap.sh

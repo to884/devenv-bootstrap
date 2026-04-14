@@ -84,13 +84,13 @@
 # ============================================================================
 - name: Zscaler証明書ファイルの存在確認
   ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.cer"
+    path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
   register: zscaler_cert_stat
   become: no
 
 - name: Zscaler証明書の形式を確認（PEM形式か判定）
   ansible.builtin.shell: |
-    grep -q "BEGIN CERTIFICATE" "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.cer"
+    grep -q "BEGIN CERTIFICATE" "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
   register: zscaler_cert_format_check
   when:
     - zscaler_cert_stat.stat.exists
@@ -101,7 +101,7 @@
 
 - name: Zscaler証明書をPEM形式に変換（DER形式の場合）
   ansible.builtin.shell: |
-    openssl x509 -inform DER -in "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.cer" \
+    openssl x509 -inform DER -in "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt" \
       -out /tmp/ZscalerRootCA.pem
   when:
     - zscaler_cert_stat.stat.exists
@@ -113,7 +113,7 @@
 
 - name: Zscaler証明書をコピー（既にPEM形式の場合）
   ansible.builtin.copy:
-    src: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.cer"
+    src: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
     dest: /tmp/ZscalerRootCA.pem
     mode: '0644'
   when:

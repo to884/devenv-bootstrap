@@ -365,7 +365,7 @@ main() {
     # プラットフォームハンドラーを動的に読み込み
     load_platform_handler
 
-    # Zscaler証明書の処理 ($HOME/.certs/ZscalerRootCA.cer)
+    # Zscaler証明書の処理 ($HOME/.certs/ZscalerRootCA.crt)
     if [[ "$(type -t update_certificates_platform)" == "function" ]]; then
         local zscaler_pem_cert
         zscaler_pem_cert=$(prepare_zscaler_certificate) || {
