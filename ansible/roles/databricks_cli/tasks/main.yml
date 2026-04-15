@@ -24,7 +24,7 @@
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
     HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
     HOMEBREW_CURL_RETRIES: "3"
-    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default('') }}"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
 
 - name: Databricks CLI をインストール
   community.general.homebrew:
@@ -36,7 +36,7 @@
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
     HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
     HOMEBREW_CURL_RETRIES: "3"
-    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default('') }}"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
 - name: Databricks CLI のバージョンを確認
   ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/databricks --version
   register: databricks_cli_version

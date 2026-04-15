@@ -26,7 +26,8 @@
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
     HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
     HOMEBREW_CURL_RETRIES: "3"
-    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default('') }}"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
+
 - name: tpm（tmux plugin manager）をクローン
   ansible.builtin.git:
     repo: https://github.com/tmux-plugins/tpm
@@ -34,8 +35,7 @@
     update: no
   become: no
   environment:
-    # Zscaler 証明書が存在する場合は設定
-    GIT_SSL_CAINFO: "{{ zscaler_ca_bundle_path | default('') }}"
+    GIT_SSL_CAINFO: "{{ zscaler_ca_bundle_path | default(omit) }}"
 
 - name: PowerLine と拡張セグメントをインストール (pip3)
   ansible.builtin.pip:

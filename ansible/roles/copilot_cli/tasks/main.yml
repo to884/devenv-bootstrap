@@ -24,7 +24,7 @@
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
     HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
     HOMEBREW_CURL_RETRIES: "3"
-    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default('') }}"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
 - name: GitHub Copilot CLI のバージョンを確認
   ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/github-copilot-cli --version
   register: copilot_cli_version

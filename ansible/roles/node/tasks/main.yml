@@ -26,7 +26,7 @@
     # ダウンロード失敗時のリトライ回数
     HOMEBREW_CURL_RETRIES: "3"
     # Zscaler 証明書が存在する場合は設定
-    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default('') }}"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
 
 - name: Node.js のバージョンを確認
   ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/node --version

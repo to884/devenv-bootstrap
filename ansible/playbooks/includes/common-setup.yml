@@ -20,12 +20,38 @@
   tasks:
     # facts 収集後に環境依存の変数を設定
     # become: no で実行ユーザーのホームディレクトリを取得
-    - name: Zscaler証明書パスを設定
+    - name: Zscaler証明書パスを一時的に設定
       ansible.builtin.set_fact:
-        zscaler_cert_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
-        zscaler_ca_bundle_path: "{{ lookup('env', 'HOME') }}/.certs/ca-bundle.pem"
+        _temp_zscaler_cert_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
+        _temp_zscaler_ca_bundle_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.pem"
       become: no
-      when: zscaler_cert_path is not defined or zscaler_ca_bundle_path is not defined
+
+    - name: Zscalerルート証明書の存在確認
+      ansible.builtin.stat:
+        path: "{{ _temp_zscaler_cert_path }}"
+      register: zscaler_cert_stat
+      become: no
+      tags:
+        - zscaler
+        - certificates
+
+    - name: Zscaler CA Bundle の存在確認
+      ansible.builtin.stat:
+        path: "{{ _temp_zscaler_ca_bundle_path }}"
+      register: zscaler_ca_bundle_stat
+      become: no
+      tags:
+        - zscaler
+        - certificates
+
+    - name: Zscaler証明書パスを設定（証明書が存在する場合のみ）
+      ansible.builtin.set_fact:
+        zscaler_cert_path: "{{ _temp_zscaler_cert_path }}"
+        zscaler_ca_bundle_path: "{{ _temp_zscaler_ca_bundle_path }}"
+      become: no
+      when: 
+        - zscaler_cert_stat.stat.exists
+        - zscaler_ca_bundle_stat.stat.exists
 
     - name: セットアップ開始メッセージ
       ansible.builtin.debug:
@@ -36,22 +62,16 @@
           ホスト: {{ ansible_facts.hostname }}
           環境タイプ: {{ environment_type | default('unknown') }}
           ディストリビューション: {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}
+          Zscaler証明書: {{ 'あり（SSL設定に使用します）' if (zscaler_cert_stat.stat.exists and zscaler_ca_bundle_stat.stat.exists) else 'なし（システムデフォルト証明書を使用します）' }}
           ================================================
-
-    - name: Zscalerルート証明書の存在確認
-      ansible.builtin.stat:
-        path: "{{ zscaler_cert_path }}"
-      register: zscaler_cert_stat
-      become: no
-      tags:
-        - zscaler
-        - certificates
 
     - name: Zscaler証明書の状態を表示
       ansible.builtin.debug:
         msg: |
           Zscaler証明書: {{ 'あり' if zscaler_cert_stat.stat.exists else 'なし' }}
-          証明書パス: {{ zscaler_cert_path }}
+          CA Bundle: {{ 'あり' if zscaler_ca_bundle_stat.stat.exists else 'なし' }}
+          証明書パス: {{ zscaler_cert_path | default('未設定') }}
+          CA Bundle パス: {{ zscaler_ca_bundle_path | default('未設定') }}
           ※ 証明書のインストールはbootstrap.shで既に実施済みです
       tags:
         - zscaler
