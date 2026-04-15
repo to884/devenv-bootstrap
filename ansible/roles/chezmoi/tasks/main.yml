@@ -47,70 +47,17 @@
       dotfiles の適用はユーザーが必要に応じて手動で行ってください
       
       使い方例:
-        chezmoi init <source-dir-or-repo>
+        # ローカルディレクトリから初期化:
+        chezmoi init ~/path/to/dotfiles
+        
+        # HTTPSリポジトリから初期化:
+        chezmoi init https://github.com/yourname/dotfiles
+        
+        # 差分確認と適用:
         chezmoi diff
         chezmoi apply
       
-      詳細: https://www.chezmoi.io/
----
-# ============================================================================
-# chezmoi ロール - タスク定義
-# ============================================================================
-#
-# 目的:
-#   chezmoi（ドットファイル管理ツール）を Homebrew (Linuxbrew) でインストールします
-#   dotfiles の初期化と適用は手動で行ってください
-#
-# 前提条件:
-#   - Linuxbrew がインストール済みであること
-#
-# 使用方法（Ansible 実行後）:
-#   1. 初期化: chezmoi init ~/devenv-bootstrap/dotfiles
-#   2. 確認: chezmoi diff
-#   3. 適用: chezmoi apply -v
-#
-# 参考:
-#   - chezmoi: https://www.chezmoi.io/
-#
-
-- name: chezmoi をインストール
-  community.general.homebrew:
-    name: chezmoi
-    state: present
-    path: /home/linuxbrew/.linuxbrew/bin/brew
-  become: no
-  environment:
-    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
-    HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
-    HOMEBREW_CURL_RETRIES: "3"
-    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
-
-- name: chezmoi のバージョンを確認
-  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/chezmoi --version
-  register: chezmoi_version
-  become: no
-  environment:
-    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
-  changed_when: false
-  failed_when: false
-
-- name: chezmoi インストール完了メッセージ
-  ansible.builtin.debug:
-    msg: |
-      ================================================
-      chezmoi のインストールが完了しました！
-      ================================================
-      バージョン: {{ chezmoi_version.stdout | default('確認失敗') }}
-      
-      次のステップ: dotfiles を手動で適用してください
-      
-      1. 初期化:
-         chezmoi init {{ inventory_dir }}/../../../dotfiles
-         
-      2. 差分を確認:
-         chezmoi diff
-         
-      3. 適用:
-         chezmoi apply -v
+      ※ Zscaler環境下でHTTPSリポジトリを使用する場合:
+        Git証明書設定が自動的に ~/.gitconfig に追加されています
       
       詳細: https://www.chezmoi.io/

@@ -5,10 +5,10 @@
 #
 # 目的:
 #   tmux（ターミナルマルチプレクサ）と PowerLine をインストールします
+#   PowerLine は pipx を使用して独立した環境にインストールされます
 #
 # 前提条件:
 #   - Linuxbrew がインストール済みであること
-#   - Python 3.8 以上がインストール済みであること
 #
 # 参考:
 #   - tmux: https://github.com/tmux/tmux
@@ -37,20 +37,40 @@
   environment:
     GIT_SSL_CAINFO: "{{ zscaler_ca_bundle_path | default(omit) }}"
 
-- name: PowerLine と拡張セグメントをインストール (pip3)
-  ansible.builtin.pip:
-    name:
-      - powerline-status
-      - powerline-mem-segment
+- name: pipx をインストール
+  community.general.homebrew:
+    name: pipx
     state: present
-    executable: pip3
+    path: /home/linuxbrew/.linuxbrew/bin/brew
   become: no
-- name: PowerLine のインストールパスを確認
-  ansible.builtin.shell: |
-    python3 -c "import site; print(site.getsitepackages()[0])"
-  register: python_site_packages
-  changed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+    HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
+    HOMEBREW_CURL_RETRIES: "3"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
+
+- name: PowerLine をインストール (pipx)
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/pipx install powerline-status
+  register: pipx_install_powerline
+  changed_when: "'installed package' in pipx_install_powerline.stdout"
+  failed_when: 
+    - pipx_install_powerline.rc != 0
+    - "'already seems to be installed' not in pipx_install_powerline.stderr"
   become: no
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+
+- name: PowerLine 拡張セグメントを追加 (pipx inject)
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/pipx inject powerline-status powerline-mem-segment
+  register: pipx_inject_segment
+  changed_when: "'Injected package' in pipx_inject_segment.stdout"
+  failed_when:
+    - pipx_inject_segment.rc != 0
+    - "'already seems to be installed' not in pipx_inject_segment.stderr"
+  become: no
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+
 - name: .config ディレクトリを作成
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config"
@@ -70,6 +90,10 @@
   register: powerline_version
   changed_when: false
   failed_when: false
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+  become: no
+
 - name: tmux インストール完了メッセージ
   ansible.builtin.debug:
     msg: |
@@ -78,11 +102,13 @@
       ================================================
       tmux バージョン: {{ tmux_version.stdout | default('確認失敗') }}
       PowerLine バージョン: {{ powerline_version.stdout | default('確認失敗') }}
-      Python site-packages: {{ python_site_packages.stdout | default('確認失敗') }}
+      
       インストール済みコンポーネント:
-      - powerline-status (ステータスライン表示)
-      - powerline-mem-segment (メモリ使用量セグメント)
-
+      - powerline-status (pipxで管理される独立環境)
+      - powerline-mem-segment (PowerLine拡張セグメント)
+      
+      PowerLine実行パス: ~/.local/bin/powerline
+      
       ※ 設定ファイルは chezmoi で管理されます
         - ~/.tmux.conf
         - ~/.config/powerline/

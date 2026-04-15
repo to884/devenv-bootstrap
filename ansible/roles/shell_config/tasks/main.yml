@@ -20,7 +20,7 @@
 
 - name: .bashrc に Linuxbrew 設定を追加
   ansible.builtin.blockinfile:
-    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - Linuxbrew"
     block: |
       # Linuxbrew を PATH に追加
@@ -33,7 +33,7 @@
 
 - name: .bashrc に starship プロンプト設定を追加
   ansible.builtin.blockinfile:
-    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - Starship"
     block: |
       # starship プロンプトを初期化
@@ -50,7 +50,7 @@
 
 - name: .bash_profile を作成（存在しない場合）
   ansible.builtin.copy:
-    dest: "{{ ansible_facts.env.HOME }}/.bash_profile"
+    dest: "{{ lookup('env', 'HOME') }}/.bash_profile"
     content: |
       # ============================================================================
       # .bash_profile - Bash ログインシェル設定ファイル
@@ -88,7 +88,7 @@
 
 - name: .profile を作成（存在しない場合）
   ansible.builtin.copy:
-    dest: "{{ ansible_facts.env.HOME }}/.profile"
+    dest: "{{ lookup('env', 'HOME') }}/.profile"
     content: |
       # ============================================================================
       # .profile - POSIX 互換ログインシェル設定ファイル
@@ -129,13 +129,13 @@
 
 - name: .zshrc の存在確認
   ansible.builtin.stat:
-    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
   register: zshrc_stat
   become: no
 
 - name: .zshrc に Linuxbrew 設定を追加（ファイルが存在する場合）
   ansible.builtin.blockinfile:
-    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - Linuxbrew"
     block: |
       # Linuxbrew を PATH に追加
@@ -149,7 +149,7 @@
 
 - name: .zshrc に starship プロンプト設定を追加（ファイルが存在する場合）
   ansible.builtin.blockinfile:
-    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - Starship"
     block: |
       # starship プロンプトを初期化
@@ -167,7 +167,7 @@
 
 - name: .curlrc に Zscaler 証明書設定を追加（証明書が存在する場合）
   ansible.builtin.blockinfile:
-    path: "{{ ansible_facts.env.HOME }}/.curlrc"
+    path: "{{ lookup('env', 'HOME') }}/.curlrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - Zscaler Certificate"
     block: |
       # ============================================================================
@@ -191,6 +191,20 @@
     - zscaler_ca_bundle_path is defined
     - zscaler_ca_bundle_path | length > 0
 
+# ============================================================================
+# Git の設定（Zscaler 証明書）
+# ============================================================================
+
+- name: Git に Zscaler 証明書設定を追加（証明書が存在する場合）
+  community.general.git_config:
+    name: http.sslCAInfo
+    scope: global
+    value: "{{ zscaler_ca_bundle_path }}"
+  become: no
+  when: 
+    - zscaler_ca_bundle_path is defined
+    - zscaler_ca_bundle_path | length > 0
+
 - name: シェル設定完了メッセージ
   ansible.builtin.debug:
     msg: |
@@ -203,6 +217,7 @@
         - ~/.profile (POSIX互換)
         - ~/.zshrc (存在する場合)
         - ~/.curlrc (Zscaler証明書: {{ 'あり' if (zscaler_ca_bundle_path is defined and zscaler_ca_bundle_path | length > 0) else 'なし' }})
+        - ~/.gitconfig (Git証明書設定: {{ 'あり' if (zscaler_ca_bundle_path is defined and zscaler_ca_bundle_path | length > 0) else 'なし' }})
       
       変更を有効にするには:
         source ~/.bashrc
