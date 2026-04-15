@@ -11,7 +11,16 @@
 
 ### シェル設定
 - `~/.bashrc` - Bash設定（Linuxbrew、starshipの初期化）
+- `~/.bash_profile` - Bashログインシェル設定（Linuxbrew shellenv）
+- `~/.profile` - POSIX互換ログインシェル設定
 - `~/.zshrc` - Zsh設定（Linuxbrew、starshipの初期化）
+
+**シェル設定ファイルの役割**:
+- `.bashrc` - インタラクティブシェル（ターミナル起動時）で読み込まれる
+- `.bash_profile` - ログインシェル（SSH、ttyログイン等）で読み込まれる。`.bashrc`を読み込む役割も持つ
+- `.profile` - POSIX互換シェル（sh、dashなど）のログインシェルで読み込まれる。bashは`.bash_profile`が存在する場合、このファイルを読み込まない
+
+すべてのシェル設定ファイルに Linuxbrew の shellenv が設定されており、PATH や環境変数が正しく設定されます。
 
 ### Git設定
 - `~/.gitconfig` - Git全体設定（delta、エイリアス、ユーザー情報）

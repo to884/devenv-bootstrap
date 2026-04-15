@@ -67,9 +67,8 @@
           1. シェルを再起動するか、以下を実行してLinuxbrewを有効化:
              eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-             ※ chezmoi により ~/.bashrc と ~/.zshrc には既に
-                Linuxbrew の初期化コードが書き込まれています。
-                次回ログイン時から自動的に有効化されます。
+             ※ ~/.bashrc と ~/.zshrc には既に Linuxbrew の初期化コードが
+                書き込まれています。次回ログイン時から自動的に有効化されます。
 
           2. Linuxbrew の動作確認:
              brew --version

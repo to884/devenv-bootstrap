@@ -36,11 +36,6 @@ sudo_nopasswd: yes
 keep_proxy_env: yes
 keep_editor_env: yes
 
-# dotfiles 管理方法
-# このリポジトリの dotfiles を chezmoi で自動適用する場合は true に設定
-# false の場合、chezmoi ツールはインストールされますが dotfiles の初期化・適用はスキップされます
-chezmoi_auto_apply: true
-
 # Zscaler 証明書設定
 # ホームディレクトリの .certs ディレクトリに配置された証明書を自動検出
 # 注: zscaler_cert_path と zscaler_ca_bundle_path は playbook 内で動的に設定されます

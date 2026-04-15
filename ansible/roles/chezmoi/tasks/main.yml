@@ -4,12 +4,11 @@
 # ============================================================================
 #
 # 目的:
-#   chezmoi（ドットファイル管理ツール）を Homebrew (Linuxbrew) でインストールし、
-#   dotfiles ディレクトリから設定を初期化・適用します
+#   chezmoi（ドットファイル管理ツール）を Homebrew (Linuxbrew) でインストールします
+#   dotfiles の初期化と適用はユーザーが手動で行います
 #
 # 前提条件:
 #   - Linuxbrew がインストール済みであること
-#   - dotfiles ディレクトリが存在すること
 #
 # 参考:
 #   - chezmoi: https://www.chezmoi.io/
@@ -36,55 +35,64 @@
   changed_when: false
   failed_when: false
 
-- name: dotfiles ディレクトリの存在確認
-  ansible.builtin.stat:
-    path: "{{ inventory_dir }}/../../../dotfiles"
-  register: dotfiles_dir
-  become: no
-  delegate_to: localhost
+- name: chezmoi インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      chezmoi のインストールが完了しました！
+      ================================================
+      バージョン: {{ chezmoi_version.stdout | default('確認失敗') }}
+      
+      ※ chezmoi ツールのみインストールされています
+      dotfiles の適用はユーザーが必要に応じて手動で行ってください
+      
+      使い方例:
+        chezmoi init <source-dir-or-repo>
+        chezmoi diff
+        chezmoi apply
+      
+      詳細: https://www.chezmoi.io/
+---
+# ============================================================================
+# chezmoi ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   chezmoi（ドットファイル管理ツール）を Homebrew (Linuxbrew) でインストールします
+#   dotfiles の初期化と適用は手動で行ってください
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 使用方法（Ansible 実行後）:
+#   1. 初期化: chezmoi init ~/devenv-bootstrap/dotfiles
+#   2. 確認: chezmoi diff
+#   3. 適用: chezmoi apply -v
+#
+# 参考:
+#   - chezmoi: https://www.chezmoi.io/
+#
 
-- name: chezmoi 初期化状態を確認
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.local/share/chezmoi"
-  register: chezmoi_initialized
-  become: no
-
-- name: chezmoi を初期化（初回）
-  ansible.builtin.command: >
-    /home/linuxbrew/.linuxbrew/bin/chezmoi init
-    --source={{ inventory_dir }}/../../../dotfiles
+- name: chezmoi をインストール
+  community.general.homebrew:
+    name: chezmoi
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
   become: no
   environment:
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
-  when:
-    - dotfiles_dir.stat.exists
-    - not chezmoi_initialized.stat.exists
-    - chezmoi_auto_apply | default(true)
-  changed_when: true
+    HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
+    HOMEBREW_CURL_RETRIES: "3"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
 
-- name: chezmoi を再初期化（設定ファイルテンプレート更新時）
-  ansible.builtin.command: >
-    /home/linuxbrew/.linuxbrew/bin/chezmoi init
-    --source={{ inventory_dir }}/../../../dotfiles
-    --force
+- name: chezmoi のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/chezmoi --version
+  register: chezmoi_version
   become: no
   environment:
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
-  when:
-    - dotfiles_dir.stat.exists
-    - chezmoi_initialized.stat.exists
-    - chezmoi_auto_apply | default(true)
-  changed_when: false  # 設定ファイルのみ更新、changed扱いしない
-
-- name: chezmoi で dotfiles を適用
-  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/chezmoi apply --verbose
-  become: no
-  environment:
-    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
-  when:
-    - dotfiles_dir.stat.exists
-    - chezmoi_auto_apply | default(true)
-  changed_when: true
+  changed_when: false
+  failed_when: false
 
 - name: chezmoi インストール完了メッセージ
   ansible.builtin.debug:
@@ -93,12 +101,16 @@
       chezmoi のインストールが完了しました！
       ================================================
       バージョン: {{ chezmoi_version.stdout | default('確認失敗') }}
-      初期化状態: {{ 'initialized' if chezmoi_initialized.stat.exists else 'not initialized' }}
-      dotfiles適用: {{ 'yes' if (chezmoi_auto_apply | default(true)) else 'skipped (chezmoi_auto_apply=false)' }}
-      使い方例:
-        chezmoi diff      # 現在の差分を表示
-        chezmoi apply     # 変更を適用
-        chezmoi edit ~/.bashrc  # テンプレートを編集
-        chezmoi cd        # chezmoiソースディレクトリに移動
-
+      
+      次のステップ: dotfiles を手動で適用してください
+      
+      1. 初期化:
+         chezmoi init {{ inventory_dir }}/../../../dotfiles
+         
+      2. 差分を確認:
+         chezmoi diff
+         
+      3. 適用:
+         chezmoi apply -v
+      
       詳細: https://www.chezmoi.io/

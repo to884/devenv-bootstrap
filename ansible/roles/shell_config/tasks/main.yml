@@ -1,0 +1,209 @@
+---
+# ============================================================================
+# shell_config ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   シェル設定ファイル（.bashrc、.bash_profile、.profile 等）を直接編集し、
+#   Linuxbrew の PATH 設定や Zscaler 証明書設定を追加します
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - Bash Startup Files: https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html
+#
+
+# ============================================================================
+# .bashrc の設定
+# ============================================================================
+
+- name: .bashrc に Linuxbrew 設定を追加
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Linuxbrew"
+    block: |
+      # Linuxbrew を PATH に追加
+      if [[ -d /home/linuxbrew/.linuxbrew ]]; then
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      fi
+    create: yes
+    mode: '0644'
+  become: no
+
+- name: .bashrc に starship プロンプト設定を追加
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Starship"
+    block: |
+      # starship プロンプトを初期化
+      if command -v starship &> /dev/null; then
+          eval "$(starship init bash)"
+      fi
+    create: yes
+    mode: '0644'
+  become: no
+
+# ============================================================================
+# .bash_profile の作成
+# ============================================================================
+
+- name: .bash_profile を作成（存在しない場合）
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts.env.HOME }}/.bash_profile"
+    content: |
+      # ============================================================================
+      # .bash_profile - Bash ログインシェル設定ファイル
+      # ============================================================================
+      #
+      # このファイルは Ansible で管理されています
+      # このファイルはログインシェル（SSH、tty ログイン等）で読み込まれます
+      #
+      # ============================================================================
+
+      # ============================================================================
+      # Linuxbrew
+      # ============================================================================
+
+      # Linuxbrew を PATH に追加（ログインシェル用）
+      if [[ -d /home/linuxbrew/.linuxbrew ]]; then
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      fi
+
+      # ============================================================================
+      # .bashrc の読み込み
+      # ============================================================================
+
+      # .bashrc が存在する場合は読み込む
+      if [[ -f ~/.bashrc ]]; then
+          source ~/.bashrc
+      fi
+    mode: '0644'
+    force: no
+  become: no
+
+# ============================================================================
+# .profile の作成
+# ============================================================================
+
+- name: .profile を作成（存在しない場合）
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts.env.HOME }}/.profile"
+    content: |
+      # ============================================================================
+      # .profile - POSIX 互換ログインシェル設定ファイル
+      # ============================================================================
+      #
+      # このファイルは Ansible で管理されています
+      # このファイルは sh、dash などの POSIX 互換シェルで読み込まれます
+      # bash は .bash_profile が存在する場合、このファイルを読み込みません
+      #
+      # ============================================================================
+
+      # ============================================================================
+      # Linuxbrew
+      # ============================================================================
+
+      # Linuxbrew を PATH に追加（ログインシェル用）
+      if [ -d /home/linuxbrew/.linuxbrew ]; then
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      fi
+
+      # ============================================================================
+      # .bashrc の読み込み（bash の場合）
+      # ============================================================================
+
+      # bash で .bashrc が存在する場合は読み込む
+      if [ -n "$BASH_VERSION" ]; then
+          if [ -f "$HOME/.bashrc" ]; then
+              . "$HOME/.bashrc"
+          fi
+      fi
+    mode: '0644'
+    force: no
+  become: no
+
+# ============================================================================
+# .zshrc の設定（オプション）
+# ============================================================================
+
+- name: .zshrc の存在確認
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+  register: zshrc_stat
+  become: no
+
+- name: .zshrc に Linuxbrew 設定を追加（ファイルが存在する場合）
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Linuxbrew"
+    block: |
+      # Linuxbrew を PATH に追加
+      if [[ -d /home/linuxbrew/.linuxbrew ]]; then
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      fi
+    create: yes
+    mode: '0644'
+  become: no
+  when: zshrc_stat.stat.exists or (ansible_facts.env.SHELL | default('') is search('zsh'))
+
+- name: .zshrc に starship プロンプト設定を追加（ファイルが存在する場合）
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Starship"
+    block: |
+      # starship プロンプトを初期化
+      if command -v starship &> /dev/null; then
+          eval "$(starship init zsh)"
+      fi
+    create: yes
+    mode: '0644'
+  become: no
+  when: zshrc_stat.stat.exists or (ansible_facts.env.SHELL | default('') is search('zsh'))
+
+# ============================================================================
+# .curlrc の設定（Zscaler 証明書）
+# ============================================================================
+
+- name: .curlrc に Zscaler 証明書設定を追加（証明書が存在する場合）
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts.env.HOME }}/.curlrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Zscaler Certificate"
+    block: |
+      # ============================================================================
+      # Zscaler SSL証明書設定
+      # ============================================================================
+      #
+      # Zscaler環境下でSSL証明書を検証するための設定
+      # 証明書ファイルは bootstrap.sh 実行時に自動的に変換・配置されます
+      #
+      # 証明書ファイルの配置場所:
+      #   - 変換後: {{ zscaler_ca_bundle_path }}
+      #
+      # ============================================================================
+
+      # Zscaler ルートCA証明書を指定
+      cacert = "{{ zscaler_ca_bundle_path }}"
+    create: yes
+    mode: '0644'
+  become: no
+  when: 
+    - zscaler_ca_bundle_path is defined
+    - zscaler_ca_bundle_path | length > 0
+
+- name: シェル設定完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      シェル設定が完了しました！
+      ================================================
+      ファイル:
+        - ~/.bashrc (Linuxbrew, starship)
+        - ~/.bash_profile (ログインシェル用)
+        - ~/.profile (POSIX互換)
+        - ~/.zshrc (存在する場合)
+        - ~/.curlrc (Zscaler証明書: {{ 'あり' if (zscaler_ca_bundle_path is defined and zscaler_ca_bundle_path | length > 0) else 'なし' }})
+      
+      変更を有効にするには:
+        source ~/.bashrc
+      または新しいシェルを起動してください

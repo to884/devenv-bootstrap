@@ -19,7 +19,6 @@
 3. **共通パッケージインストール**
    - 基本的な開発ツール (git, curl, wget, vim, htop)
    - Linuxbrew本体のインストール
-   - ※ シェル設定ファイルは chezmoi で管理されます
 
 4. **topgrade インストール**
    - パッケージ一括更新ツール topgrade (Linuxbrew経由)
@@ -36,7 +35,6 @@
 7. **starship インストール**
    - 高速でカスタマイズ可能なシェルプロンプト (Linuxbrew経由)
    - Rustベースのクロスシェル対応プロンプト
-   - ※ シェル初期化設定は chezmoi で管理されます
 
 8. **bat インストール**
    - 構文ハイライト機能付きcatの改良版 (Linuxbrew経由)
@@ -45,7 +43,6 @@
 9. **git-delta インストール**
    - Git差分の構文ハイライトツール (Linuxbrew経由)
    - より読みやすいgit diff表示
-   - ※ Git設定は chezmoi で管理されます
 
 10. **GitHub CLI (gh) インストール**
    - GitHubの公式コマンドラインツール (Linuxbrew経由)
@@ -63,26 +60,31 @@
    - lsコマンドの現代的な代替ツール (Linuxbrew経由)
    - アイコン表示、Git統合、ツリー表示
 
-14. **chezmoi インストールと初期化**
-   - ドットファイル管理ツール chezmoi (Linuxbrew経由)
-   - dotfilesディレクトリからの自動初期化と適用
-   - `.bashrc`, `.zshrc`, `.gitconfig`, `.tmux.conf` などを管理
+14. **シェル設定の適用**
+   - .bashrc, .bash_profile, .profile, .zshrc の設定
+   - Linuxbrew shellenv の追加（PATH等の環境変数）
+   - starship プロンプトの初期化
+   - .curlrc に Zscaler証明書設定（証明書が存在する場合）
 
-15. **xh インストール**
+15. **chezmoi インストール**
+   - ドットファイル管理ツール chezmoi (Linuxbrew経由)
+   - ツールのインストールのみ（dotfiles の適用は手動）
+   - 複数マシン間での設定ファイル同期に便利
+
+16. **xh インストール**
    - HTTPクライアントツール (Linuxbrew経由)
    - curlやhttpieの代替、Rust製で高速
 
-16. **tmux インストール**
+17. **tmux インストール**
    - ターミナルマルチプレクサ (Linuxbrew経由)
    - 複数のシェルセッションを管理、Powerline統合
-   - ※ tmux設定ファイルは chezmoi で管理されます
 
-17. **Docker インストール**
+18. **Docker インストール**
    - Docker Engine の公式スクリプト経由インストール
    - ユーザーを docker グループに追加
    - Docker環境では自動スキップ
 
-18. **SSH設定**
+19. **SSH設定**
    - OpenSSH serverのインストールと設定
    - systemdサービスの有効化
 

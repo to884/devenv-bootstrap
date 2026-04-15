@@ -65,10 +65,6 @@ source .ansible-venv/bin/activate
 # 3. Ansibleでパッケージとツールをインストール
 cd ansible
 ansible-playbook -i inventories/wsl/hosts site.yml
-
-# 4. （オプション）chezmoiで個人設定を適用
-chezmoi init /path/to/devenv-bootstrap/dotfiles
-chezmoi apply -v
 ```
 
 ## 🗂 ディレクトリ構成
@@ -86,14 +82,7 @@ devenv-bootstrap/
 │   ├── roles/           # ロール（パッケージ、ツールのインストール）
 │   ├── inventories/     # 環境別インベントリ（WSL、Azure VM、EC2等）
 │   └── group_vars/      # グローバル変数
-└── dotfiles/             # chezmoi管理下の個人設定ファイル
-    ├── dot_bashrc.tmpl  # ~/.bashrc
-    ├── dot_zshrc.tmpl   # ~/.zshrc
-    ├── dot_gitconfig.tmpl # ~/.gitconfig
-    ├── dot_tmux.conf    # ~/.tmux.conf
-    └── dot_config/      # ~/.config/
-        ├── starship.toml
-        └── powerline/
+└── README.md             # このファイル
 
 # Zscaler環境の場合
 ~/.certs/
@@ -101,17 +90,21 @@ devenv-bootstrap/
                          # 自動的にPEM形式に変換され、システム証明書ストアに追加されます
 ```
 
-## 🔄 Ansibleとchezmoiの役割分担
+## � Ansible によるシェル設定管理
 
-このプロジェクトは、**Ansible**と**chezmoi**を組み合わせたハイブリッドアプローチを採用しています。
+このプロジェクトでは、**Ansible**がシステム全体のセットアップを自動化します。
 
-### Ansible: システム基盤の構築
+### Ansible: 開発環境の完全自動セットアップ
 
-**対象**: システムレベルの設定とパッケージ管理
+**対象**: システムレベルの設定、パッケージ管理、シェル設定
 
-- パッケージのインストール（Linuxbrew、bat、delta、eza、gh、chezmoi等）
+- パッケージのインストール（Linuxbrew、bat、delta、eza、gh、chezmoi、starship、tmux等）
 - システム設定（sudo、SSH、Docker）
 - 環境固有の設定（WSL、Azure VM、EC2等）
+- **シェル設定ファイルの管理**（.bashrc、.bash_profile、.profile、.zshrc）
+  - Linuxbrew shellenv の設定（PATH等の環境変数）
+  - starship プロンプトの初期化
+- **curl設定**（.curlrc - Zscaler証明書パス）
 
 **実行方法**:
 ```bash
@@ -119,42 +112,19 @@ cd ansible
 ansible-playbook -i inventories/wsl/hosts site.yml
 ```
 
-### chezmoi: 個人設定ファイルの管理
+**インストールされる主要ツール**:
+- **chezmoi** - ドットファイル管理ツール（手動で使用）
+- **starship** - 高速でカスタマイズ可能なシェルプロンプト
+- **tmux** - ターミナルマルチプレクサ
+- **bat**, **delta**, **eza**, **xh** - 便利な CLI ツール
+- **gh**, **copilot_cli** - GitHub関連ツール
 
-**対象**: ユーザー個別のドットファイル
-
-- シェル設定（~/.bashrc、~/.zshrc）
-- Git設定（~/.gitconfig）
-- ターミナル設定（~/.tmux.conf、~/.config/starship.toml）
-- PowerLine設定（~/.config/powerline/）
-
-**実行方法**:
-```bash
-# 初回セットアップ
-chezmoi init /path/to/devenv-bootstrap/dotfiles
-# または GitHubから
-chezmoi init https://github.com/your-username/dotfiles.git
-
-# 変更を確認
-chezmoi diff
-
-# 適用
-chezmoi apply -v
-```
-
-### 切り替え方法
-
-`ansible/group_vars/all.yml` で dotfiles の自動適用を制御可能：
-
-```yaml
-# このリポジトリの dotfiles を chezmoi で自動適用する場合は true に設定
-# false の場合、chezmoi ツールはインストールされますが dotfiles の初期化・適用はスキップされます
-chezmoi_auto_apply: true  # デフォルト: 自動適用する
-```
-
-**推奨設定**: `chezmoi_auto_apply: true`（デフォルト）
-
-これにより、chezmoi のインストールと同時に dotfiles ディレクトリから設定が自動的に適用されます。
+**作成される設定ファイル**:
+- `~/.bashrc` - Bash設定（Linuxbrew、starshipの初期化）
+- `~/.bash_profile` - Bashログインシェル設定
+- `~/.profile` - POSIX互換ログインシェル設定
+- `~/.zshrc` - Zsh設定（使用している場合）
+- `~/.curlrc` - curl設定（Zscaler証明書が存在する場合）
 
 ## 📖 使用方法
 
