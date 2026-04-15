@@ -17,18 +17,37 @@
   become: yes
   gather_facts: yes
 
+  vars:
+    # インストールするロールのリスト（順序を保持）
+    common_roles:
+      - { name: sudo, tags: ['sudo', 'security'] }
+      - { name: common, tags: ['common', 'packages'] }
+      - { name: shell_config, tags: ['shell_config', 'shell', 'dotfiles'] }
+      - { name: chezmoi, tags: ['chezmoi', 'dotfiles', 'tools'] }
+      - { name: topgrade, tags: ['topgrade'] }
+      - { name: uv, tags: ['uv', 'python'] }
+      - { name: node, tags: ['node', 'nodejs', 'npm'] }
+      - { name: starship, tags: ['starship', 'shell'] }
+      - { name: bat, tags: ['bat', 'tools'] }
+      - { name: shellcheck, tags: ['shellcheck', 'tools', 'scripting'] }
+      - { name: delta, tags: ['delta', 'git', 'tools'] }
+      - { name: gh, tags: ['gh', 'git', 'github', 'tools'] }
+      - { name: copilot_cli, tags: ['copilot_cli', 'copilot', 'github', 'ai', 'tools'] }
+      - { name: databricks_cli, tags: ['databricks_cli', 'databricks', 'data', 'tools'] }
+      - { name: eza, tags: ['eza', 'tools'] }
+      - { name: xh, tags: ['xh', 'tools', 'http'] }
+      - { name: tmux, tags: ['tmux', 'tools'] }
+      - { name: docker_install, tags: ['docker', 'docker_install'] }
+      - { name: ssh, tags: ['ssh', 'security'] }
+
   tasks:
-    # facts 収集後に環境依存の変数を設定
-    # become: no で実行ユーザーのホームディレクトリを取得
-    - name: Zscaler証明書パスを一時的に設定
-      ansible.builtin.set_fact:
-        _temp_zscaler_cert_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
-        _temp_zscaler_ca_bundle_path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.pem"
-      become: no
+    # ============================================================================
+    # Zscaler証明書の検出と設定
+    # ============================================================================
 
     - name: Zscalerルート証明書の存在確認
       ansible.builtin.stat:
-        path: "{{ _temp_zscaler_cert_path }}"
+        path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.crt"
       register: zscaler_cert_stat
       become: no
       tags:
@@ -37,7 +56,7 @@
 
     - name: Zscaler CA Bundle の存在確認
       ansible.builtin.stat:
-        path: "{{ _temp_zscaler_ca_bundle_path }}"
+        path: "{{ lookup('env', 'HOME') }}/.certs/ZscalerRootCA.pem"
       register: zscaler_ca_bundle_stat
       become: no
       tags:
@@ -46,14 +65,17 @@
 
     - name: Zscaler証明書パスを設定（証明書が存在する場合のみ）
       ansible.builtin.set_fact:
-        zscaler_cert_path: "{{ _temp_zscaler_cert_path }}"
-        zscaler_ca_bundle_path: "{{ _temp_zscaler_ca_bundle_path }}"
+        zscaler_cert_path: "{{ zscaler_cert_stat.stat.path }}"
+        zscaler_ca_bundle_path: "{{ zscaler_ca_bundle_stat.stat.path }}"
       become: no
-      when: 
+      when:
         - zscaler_cert_stat.stat.exists
         - zscaler_ca_bundle_stat.stat.exists
+      tags:
+        - zscaler
+        - certificates
 
-    - name: セットアップ開始メッセージ
+    - name: 共通セットアップ開始メッセージ
       ansible.builtin.debug:
         msg: |
           ================================================
@@ -63,164 +85,25 @@
           環境タイプ: {{ environment_type | default('unknown') }}
           ディストリビューション: {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}
           Zscaler証明書: {{ 'あり（SSL設定に使用します）' if (zscaler_cert_stat.stat.exists and zscaler_ca_bundle_stat.stat.exists) else 'なし（システムデフォルト証明書を使用します）' }}
-          ================================================
-
-    - name: Zscaler証明書の状態を表示
-      ansible.builtin.debug:
-        msg: |
-          Zscaler証明書: {{ 'あり' if zscaler_cert_stat.stat.exists else 'なし' }}
-          CA Bundle: {{ 'あり' if zscaler_ca_bundle_stat.stat.exists else 'なし' }}
-          証明書パス: {{ zscaler_cert_path | default('未設定') }}
-          CA Bundle パス: {{ zscaler_ca_bundle_path | default('未設定') }}
+          {{ '証明書パス: ' + zscaler_cert_path if (zscaler_cert_stat.stat.exists and zscaler_ca_bundle_stat.stat.exists) else '' }}
+          {{ 'CA Bundle パス: ' + zscaler_ca_bundle_path if (zscaler_cert_stat.stat.exists and zscaler_ca_bundle_stat.stat.exists) else '' }}
           ※ 証明書のインストールはbootstrap.shで既に実施済みです
+          ================================================
       tags:
-        - zscaler
-        - certificates
+        - always
 
-    - name: sudo 設定を適用
-      ansible.builtin.include_role:
-        name: sudo
-      tags:
-        - sudo
-        - security
+    # ============================================================================
+    # 共通ロールの適用
+    # ============================================================================
 
-    - name: 共通パッケージとLinuxbrewをインストール
+    - name: "{{ item.name }} ロールを適用"
       ansible.builtin.include_role:
-        name: common
+        name: "{{ item.name }}"
+        apply:
+          tags: "{{ item.tags }}"
+      loop: "{{ common_roles }}"
       tags:
-        - common
-        - packages
-
-    - name: シェル設定を適用
-      ansible.builtin.include_role:
-        name: shell_config
-      tags:
-        - shell_config
-        - shell
-        - dotfiles
-
-    - name: chezmoi をインストール
-      ansible.builtin.include_role:
-        name: chezmoi
-      tags:
-        - chezmoi
-        - dotfiles
-        - tools
-
-    - name: topgrade をインストール
-      ansible.builtin.include_role:
-        name: topgrade
-      tags:
-        - topgrade
-
-    - name: uv をインストール
-      ansible.builtin.include_role:
-        name: uv
-      tags:
-        - uv
-        - python
-
-    - name: Node.js をインストール
-      ansible.builtin.include_role:
-        name: node
-      tags:
-        - node
-        - nodejs
-        - npm
-
-    - name: starship をインストール
-      ansible.builtin.include_role:
-        name: starship
-      tags:
-        - starship
-        - shell
-
-    - name: bat をインストール
-      ansible.builtin.include_role:
-        name: bat
-      tags:
-        - bat
-        - tools
-
-    - name: shellcheck をインストール
-      ansible.builtin.include_role:
-        name: shellcheck
-      tags:
-        - shellcheck
-        - tools
-        - scripting
-
-    - name: git-delta をインストール
-      ansible.builtin.include_role:
-        name: delta
-      tags:
-        - delta
-        - git
-        - tools
-
-    - name: GitHub CLI (gh) をインストール
-      ansible.builtin.include_role:
-        name: gh
-      tags:
-        - gh
-        - git
-        - github
-        - tools
-
-    - name: GitHub Copilot CLI をインストール
-      ansible.builtin.include_role:
-        name: copilot_cli
-      tags:
-        - copilot_cli
-        - copilot
-        - github
-        - ai
-        - tools
-
-    - name: Databricks CLI をインストール
-      ansible.builtin.include_role:
-        name: databricks_cli
-      tags:
-        - databricks_cli
-        - databricks
-        - data
-        - tools
-
-    - name: eza をインストール
-      ansible.builtin.include_role:
-        name: eza
-      tags:
-        - eza
-        - tools
-
-    - name: xh をインストール
-      ansible.builtin.include_role:
-        name: xh
-      tags:
-        - xh
-        - tools
-        - http
-
-    - name: tmux をインストール
-      ansible.builtin.include_role:
-        name: tmux
-      tags:
-        - tmux
-        - tools
-
-    - name: Docker をインストール
-      ansible.builtin.include_role:
-        name: docker_install
-      tags:
-        - docker
-        - docker_install
-
-    - name: SSH 設定を適用
-      ansible.builtin.include_role:
-        name: ssh
-      tags:
-        - ssh
-        - security
+        - always
 
 - name: 共通セットアップ完了
   hosts: all
