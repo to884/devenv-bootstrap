@@ -21,7 +21,26 @@
   - システム証明書ストアへの自動追加
   - pipコマンドで証明書を自動適用（SSL証明書検証エラーを回避）
 
-## 🚀 クイックスタート
+## � 必要要件
+
+このプロジェクトを使用するには、以下の要件を満たす必要があります。
+
+### 必須要件
+
+- **Git**: リポジトリのクローンに必要
+- **Python 3.8以上**: `bootstrap.sh` で仮想環境の作成に使用
+- **curl または wget**: 証明書のダウンロードなどに使用
+
+### 推奨要件
+
+- **Nerd Font**: ターミナルでのアイコン表示に必要
+  - このプロジェクトでインストールされるツール（Starship、Powerline、Tmuxなど）が、プロンプトやステータスバーでアイコンを正しく表示するために必要です
+  - 推奨フォント: [Hack Nerd Font](https://www.nerdfonts.com/)、[JetBrains Mono Nerd Font](https://www.nerdfonts.com/)、[Fira Code Nerd Font](https://www.nerdfonts.com/) など
+  - インストール方法: [Nerd Fonts公式サイト](https://www.nerdfonts.com/) を参照
+  - インストール後、ターミナルの設定でNerd Fontを選択してください
+  - ⚠️ アイコンが正しく表示されない場合（□や?などの記号で表示される場合）は、Nerd Fontのインストールとターミナルでの設定を確認してください
+
+## �🚀 クイックスタート
 
 ```bash
 # リポジトリをクローン
