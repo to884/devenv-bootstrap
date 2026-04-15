@@ -89,10 +89,10 @@
    - systemdサービスの有効化
 
 19. **環境固有の設定**
-   - WSL: /etc/wsl.conf の設定、systemd有効化
+   - WSL: /etc/wsl.conf の設定、systemd有効化、**Azure CLI のインストール**
    - Azure VM: Azure CLI のインストール
    - EC2: AWS CLI v2 のインストール
-   - Hyper-V: 統合サービスのインストール
+   - Hyper-V: 統合サービスのインストール、**Azure CLI のインストール**
    - ベアメタル: ハードウェア情報の表示
    - Docker: コンテナ環境の検出
 
@@ -287,6 +287,12 @@ ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --tags ssh
 
 # WSL固有設定のみ
 ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap.yml --tags wsl
+
+# Azure CLIのみインストール（WSL環境）
+ansible-playbook -i inventories/wsl/hosts playbooks/bootstrap-wsl.yml --tags azure_cli
+
+# Azure CLIのみインストール（Hyper-V環境）
+ansible-playbook -i inventories/hyperv/hosts playbooks/bootstrap-hyperv.yml --tags azure_cli
 ```
 
 ### 特定のタスクをスキップ
@@ -372,6 +378,9 @@ ansible/
     │   └── tasks/
     │       └── main.yml
     ├── ssh/                         # SSH設定ロール
+    │   └── tasks/
+    │       └── main.yml
+    ├── azure_cli/                   # Azure CLIインストールロール
     │   └── tasks/
     │       └── main.yml
     ├── wsl/                         # WSL固有設定ロール
@@ -815,6 +824,39 @@ newgrp docker
 
 ### 環境固有ロール
 
+#### azure_cli ロール
+
+**対象**: WSL 環境および Hyper-V 仮想マシン
+
+**実行内容**:
+- Linuxbrew 経由で Azure CLI をインストール (`brew install azure-cli`)
+- インストール後のバージョン確認
+
+**前提条件**:
+- Linuxbrew がインストール済みであること
+
+**インストール後**:
+
+動作確認:
+```bash
+# バージョン確認
+az --version
+```
+
+使用例:
+```bash
+# Azure にログイン
+az login
+
+# サブスクリプション一覧を確認
+az account list --output table
+
+# リソースグループ一覧を確認
+az group list --output table
+```
+
+公式サイト: https://learn.microsoft.com/ja-jp/cli/azure/
+
 #### wsl ロール
 
 **対象**: WSL (Windows Subsystem for Linux) 環境
@@ -824,6 +866,7 @@ newgrp docker
 - systemd の有効化
 - ネットワーク設定（hostname生成の無効化）
 - Windows相互運用の設定
+- Azure CLI のインストール (`azure_cli` ロール経由)
 
 #### azure_vm ロール
 
@@ -851,6 +894,7 @@ newgrp docker
 **実行内容**:
 - linux-virtual パッケージのインストール
 - Hyper-V統合サービスの有効化
+- Azure CLI のインストール (`azure_cli` ロール経由)
 
 #### baremetal ロール
 
