@@ -1,0 +1,44 @@
+---
+# ============================================================================
+# dua_cli ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   dua-cli（ディスク使用量分析ツール）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - dua-cli: https://github.com/byron/dua-cli
+#
+
+- name: dua-cli をインストール
+  community.general.homebrew:
+    name: dua-cli
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  become: no
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+    HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
+    HOMEBREW_CURL_RETRIES: "3"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
+
+- name: dua-cli のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/dua --version
+  register: dua_version
+  changed_when: false
+  become: no
+  failed_when: false
+  tags:
+    - dua_cli
+    - verification
+
+- name: dua-cli のインストールを確認
+  ansible.builtin.debug:
+    msg: "dua-cli がインストールされました: {{ dua_version.stdout | default('バージョン情報取得失敗') }}"
+  when: dua_version.rc == 0
+  tags:
+    - dua_cli
+    - verification

@@ -35,6 +35,7 @@
       - { name: copilot_cli, tags: ['copilot_cli', 'copilot', 'github', 'ai', 'tools'] }
       - { name: databricks_cli, tags: ['databricks_cli', 'databricks', 'data', 'tools'] }
       - { name: eza, tags: ['eza', 'tools'] }
+      - { name: dua_cli, tags: ['dua_cli', 'tools', 'disk'] }
       - { name: xh, tags: ['xh', 'tools', 'http'] }
       - { name: tmux, tags: ['tmux', 'tools'] }
       - { name: docker_install, tags: ['docker', 'docker_install'] }
