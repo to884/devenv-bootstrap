@@ -77,7 +77,7 @@
 
 17. **tmux インストール**
    - ターミナルマルチプレクサ (Linuxbrew経由)
-   - 複数のシェルセッションを管理、Powerline統合
+   - 複数のシェルセッションを管理
 
 18. **Docker インストール**
    - Docker Engine の公式スクリプト経由インストール
@@ -133,7 +133,6 @@ chezmoiによって管理されるファイル:
 - `~/.gitconfig` - Git設定（delta、エイリアス）
 - `~/.tmux.conf` - tmux設定
 - `~/.config/starship.toml` - starshipプロンプト設定
-- `~/.config/powerline/` - Powerline設定
 - `~/.ssh/config` - SSH設定
 
 ### 実行方法
@@ -1024,7 +1023,6 @@ chezmoi_auto_apply: true  # デフォルト: 自動適用（推奨）
 - Git設定（~/.gitconfig）
 - ターミナル設定（~/.tmux.conf）
 - プロンプト設定（~/.config/starship.toml）
-- PowerLine設定（~/.config/powerline/）
 
 ### ワークフロー
 

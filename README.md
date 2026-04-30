@@ -34,7 +34,7 @@
 ### 推奨要件
 
 - **Nerd Font**: ターミナルでのアイコン表示に必要
-  - このプロジェクトでインストールされるツール（Starship、Powerline、Tmuxなど）が、プロンプトやステータスバーでアイコンを正しく表示するために必要です
+  - このプロジェクトでインストールされるツール（Starship、Tmuxなど）が、プロンプトやステータスバーでアイコンを正しく表示するために必要です
   - 推奨フォント: [Hack Nerd Font](https://www.nerdfonts.com/)、[JetBrains Mono Nerd Font](https://www.nerdfonts.com/)、[Fira Code Nerd Font](https://www.nerdfonts.com/) など
   - インストール方法: [Nerd Fonts公式サイト](https://www.nerdfonts.com/) を参照
   - インストール後、ターミナルの設定でNerd Fontを選択してください
