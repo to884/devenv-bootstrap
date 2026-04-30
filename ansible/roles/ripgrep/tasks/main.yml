@@ -1,0 +1,56 @@
+---
+# ============================================================================
+# ripgrep ロール - タスク定義
+# ============================================================================
+#
+# 目的:
+#   ripgrep（高速なテキスト検索ツール）をインストールします
+#
+# 前提条件:
+#   - Linuxbrew がインストール済みであること
+#
+# 参考:
+#   - ripgrep: https://github.com/BurntSushi/ripgrep
+#
+
+- name: ripgrep をインストール
+  community.general.homebrew:
+    name: ripgrep
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  become: no
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+    HOMEBREW_NO_VERIFY_ATTESTATIONS: "1"
+    HOMEBREW_CURL_RETRIES: "3"
+    CURL_CA_BUNDLE: "{{ zscaler_ca_bundle_path | default(omit) }}"
+
+- name: ripgrep のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/rg --version
+  register: ripgrep_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+  become: no
+
+- name: ripgrep インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      ripgrep のインストールが完了しました！
+      ================================================
+      バージョン: {{ ripgrep_version.stdout_lines[0] | default('確認失敗') }}
+      使用方法:
+      # ファイル名と行番号付きで検索
+      rg "検索文字列"
+
+      # 大文字小文字を区別せず検索
+      rg -i "検索文字列"
+
+      # 特定拡張子のみ検索
+      rg "検索文字列" -g "*.yml"
+
+      # 隠しファイルも含めて検索
+      rg "検索文字列" --hidden
+      ================================================
