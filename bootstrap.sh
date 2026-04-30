@@ -102,8 +102,8 @@ load_platform_handler() {
     distro=$(detect_linux_distro)
     pkg_mgr=$(detect_package_manager "$distro")
 
-    log_info "検出されたディストリビューション: $distro"
-    log_info "パッケージマネージャー: $pkg_mgr"
+    log_success "検出されたディストリビューション: $distro"
+    log_success "パッケージマネージャー: $pkg_mgr"
 
     # プラットフォームサポートを検証
     if [[ "$pkg_mgr" == "unknown" ]]; then
@@ -237,19 +237,32 @@ install_via_pip() {
 
     log_info "仮想環境にAnsibleをインストール中: $VENV_PATH"
 
-    # システム証明書バンドルを検出 (Zscaler環境対応)
+    # Zscaler証明書がある場合のみ、pipにシステム証明書バンドルを明示指定
     local distro ca_bundle
+    local zscaler_source_cert zscaler_converted_cert
+    local zscaler_cert_exists=false
     local -a pip_cert_options=()
+
+    zscaler_source_cert="${HOME}/.certs/ZscalerRootCA.crt"
+    zscaler_converted_cert="${HOME}/.certs/ZscalerRootCA.pem"
+
+    if [[ -f "$zscaler_source_cert" ]] || [[ -f "$zscaler_converted_cert" ]]; then
+        zscaler_cert_exists=true
+    fi
     
-    distro=$(detect_linux_distro)
-    ca_bundle=$(get_system_ca_bundle "$distro")
-    
-    if [[ -n "$ca_bundle" && -f "$ca_bundle" ]]; then
-        pip_cert_options+=(--cert "$ca_bundle")
-        log_info "pip用の証明書バンドルを設定: $ca_bundle"
-        log_debug "Zscaler環境でのSSL証明書検証を有効化しました"
+    if [[ "$zscaler_cert_exists" == "true" ]]; then
+        distro=$(detect_linux_distro)
+        ca_bundle=$(get_system_ca_bundle "$distro")
+
+        if [[ -n "$ca_bundle" && -f "$ca_bundle" ]]; then
+            pip_cert_options+=(--cert "$ca_bundle")
+            log_info "Zscaler証明書を考慮してpip用証明書バンドルを設定: $ca_bundle"
+        else
+            log_warning "Zscaler証明書は検出されましたが、システム証明書バンドルが見つかりません"
+            log_warning "pipはデフォルトの証明書検証を使用します"
+        fi
     else
-        log_debug "システム証明書バンドルが見つかりません (デフォルトの証明書検証を使用)"
+        log_debug "Zscaler証明書が見つからないため、pipの証明書バンドル指定をスキップします"
     fi
 
     # インストール用の一時ディレクトリを作成
