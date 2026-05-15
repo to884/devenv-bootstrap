@@ -1,0 +1,70 @@
+---
+# ============================================================================
+# osv-scanner インストールタスク
+# ============================================================================
+#
+# 目的:
+#   Linuxbrew を利用して osv-scanner をインストールします。
+#
+# 対応ディストリビューション:
+#   - Ubuntu/Debian (apt)
+#   - RHEL/CentOS/Fedora (dnf/yum)
+#   - Arch Linux (pacman)
+#
+# 使用方法:
+#   このロールを playbook で include してください。
+#
+# 必要要件:
+#   - Linuxbrew (Homebrew) がインストール済みであること
+#
+# タグ:
+#   - osv_scanner
+#   - security
+#   - brew
+#
+# ============================================================================
+- name: osv-scanner を brew でインストール
+  community.general.homebrew:
+    name: google/osv-scanner/osv-scanner
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+  tags:
+    - osv_scanner
+    - security
+    - brew
+
+- name: osv-scanner のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/osv-scanner --version
+  register: osv_scanner_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+  tags:
+    - osv_scanner
+    - security
+    - brew
+
+- name: osv-scanner インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      osv-scanner のインストールが完了しました！
+      ================================================
+      バージョン: {{ osv_scanner_version.stdout | default('確認失敗') }}
+      使用方法:
+      # ディレクトリをスキャン
+      osv-scanner --recursive .
+
+      # lockファイルをスキャン
+      osv-scanner --lockfile=package-lock.json
+
+      公式サイト: https://github.com/google/osv-scanner
+      ================================================
+  when: osv_scanner_version.rc == 0
+  tags:
+    - osv_scanner
+    - security
+    - brew

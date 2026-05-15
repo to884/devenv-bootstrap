@@ -1,0 +1,73 @@
+---
+# ============================================================================
+# trivy インストールタスク
+# ============================================================================
+#
+# 目的:
+#   Linuxbrew を利用して trivy をインストールします。
+#
+# 対応ディストリビューション:
+#   - Ubuntu/Debian (apt)
+#   - RHEL/CentOS/Fedora (dnf/yum)
+#   - Arch Linux (pacman)
+#
+# 使用方法:
+#   このロールを playbook で include してください。
+#
+# 必要要件:
+#   - Linuxbrew (Homebrew) がインストール済みであること
+#
+# タグ:
+#   - trivy
+#   - security
+#   - brew
+#
+# ============================================================================
+- name: trivy を brew でインストール
+  community.general.homebrew:
+    name: aquasecurity/trivy/trivy
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+  tags:
+    - trivy
+    - security
+    - brew
+
+- name: trivy のバージョンを確認
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/trivy --version
+  register: trivy_version
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+  tags:
+    - trivy
+    - security
+    - brew
+
+- name: trivy インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: |
+      ================================================
+      trivy のインストールが完了しました！
+      ================================================
+      バージョン: {{ trivy_version.stdout | default('確認失敗') }}
+      使用方法:
+      # コンテナイメージをスキャン
+      trivy image <イメージ名>
+
+      # ファイルシステムをスキャン
+      trivy fs <ディレクトリ>
+
+      # 設定ファイルをスキャン
+      trivy config <ファイル>
+
+      公式サイト: https://github.com/aquasecurity/trivy
+      ================================================
+  when: trivy_version.rc == 0
+  tags:
+    - trivy
+    - security
+    - brew

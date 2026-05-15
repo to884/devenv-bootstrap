@@ -39,6 +39,8 @@
       - { name: dua_cli, tags: ['dua_cli', 'tools', 'disk'] }
       - { name: xh, tags: ['xh', 'tools', 'http'] }
       - { name: zip, tags: ['zip', 'tools', 'archive'] }
+      - { name: trivy, tags: ['trivy', 'security', 'brew'] }
+      - { name: osv_scanner, tags: ['osv_scanner', 'security', 'brew'] }
       - { name: unar, tags: ['unar', 'tools', 'archive'] }
       - { name: tmux, tags: ['tmux', 'tools'] }
       - { name: docker_install, tags: ['docker', 'docker_install'] }
